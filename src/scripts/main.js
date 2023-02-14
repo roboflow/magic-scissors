@@ -5,6 +5,8 @@ const page = require("page");
 const swal = require("sweetalert2");
 const _ = require("lodash");
 
+var workspace, apiKey;
+
 $(function () {
     window.$ = $;
 
@@ -60,11 +62,17 @@ $(function () {
 
         var validateApiKey = function(apiKey) {
             return new Promise(function(resolve, reject) {
-                setLoading(true);
-                setTimeout(function() {
-                    setLoading(false);
-                    resolve(false);
-                }, 1000);
+                $.post("https://api.roboflow.com/", {
+                    api_key: apiKey
+                }, "JSON").then(function(response) {
+                    if(!response || !response.workspace) {
+                        reject(response);
+                    } else {
+                        resolve(response);
+                    }
+                }).catch(function(e) {
+                    reject(e);
+                });
             });
         };
 
@@ -76,7 +84,7 @@ $(function () {
             e.preventDefault();
             e.stopPropagation();
 
-            var apiKey = $('#apiKey').val();
+            apiKey = $('#apiKey').val();
             console.log('apiKey', apiKey);
 
             // if empty, return error
@@ -85,8 +93,13 @@ $(function () {
             // if not letters and numbers, return error
             if (!/^[a-zA-Z0-9]+$/.test(apiKey)) return error("API key is malformed. It should only contain letters and numbers.");
 
-            validateApiKey(apiKey).then(function(isValid) {
-                if(!isValid) return error("API key is invalid.");
+            setLoading(true);
+            validateApiKey(apiKey).then(function(response) {
+                workspace = response.workspace;
+                $('body').html(workspace);
+            }).catch(function() {
+                setLoading(false);
+                error("API key is invalid.");
             });
 
             return false;
