@@ -75,7 +75,7 @@ module.exports = {
         extensions: [".tsx", ".ts", ".js"]
     },
     entry: {
-        customer: [
+        main: [
             path.resolve(__dirname, "src/scripts/main.js"),
             path.resolve(__dirname, "src/styles/_main.scss")
         ]

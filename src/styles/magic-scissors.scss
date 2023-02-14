@@ -1,6 +1,6 @@
 @layer components {
 html, body {
-    background-color: black;
+    @apply bg-aquavision-100;
     font-family: Sohne, Larsseit, HelveticaNeue, "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 20px;
     overflow: hidden;
@@ -25,7 +25,7 @@ html body {
 }
 
 a {
-    color: white;
+    @apply text-blue-500 hover:underline hover:text-blue-500;
 }
 
 html, body {
