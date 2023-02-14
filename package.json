@@ -1,0 +1,57 @@
+{
+    "name": "magic-scissors",
+    "private": true,
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "axios": "^0.24.0",
+        "axios-retry": "^3.2.4",
+        "jquery": "^3.6.0",
+        "lodash": "^4.17.21",
+        "page": "^1.11.6",
+        "qs": "^6.9.4",
+        "sweetalert2": "^9.17.2"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.15.5",
+        "@babel/plugin-transform-runtime": "^7.15.0",
+        "@babel/preset-env": "^7.15.4",
+        "@babel/preset-react": "^7.14.5",
+        "autoprefixer": "^10.2.5",
+        "babel-loader": "^8.2.3",
+        "clean-webpack-plugin": "^3.0.0",
+        "css-loader": "^3.6.0",
+        "handlebars": "^4.7.6",
+        "handlebars-loader": "^1.7.1",
+        "html-webpack-plugin": "^5.3.1",
+        "html-webpack-tags-plugin": "^3.0.0",
+        "mini-css-extract-plugin": "^1.6.0",
+        "postcss": "^8.2.8",
+        "postcss-focus-visible": "^5.0.0",
+        "postcss-import": "^14.0.0",
+        "postcss-loader": "^4.2.0",
+        "postcss-nested": "^5.0.5",
+        "tailwindcss": "^2.2.19",
+        "webpack": "^5.36.2",
+        "webpack-cli": "^4.7.0",
+        "webpack-livereload-plugin": "^3.0.1"
+    },
+    "scripts": {
+        "build:dev": "TAILWIND_MODE=watch WEBPACK_ENV=dev webpack --env dev --watch",
+        "build:prod": "TAILWIND_MODE=watch WEBPACK_ENV=prod NODE_ENV=production webpack --env prod --watch",
+        "prod:deploy": "WEBPACK_ENV=prod NODE_ENV=production webpack --env prod; firebase deploy --only hosting,functions",
+        "prod:deploy:functions": "firebase deploy --only functions",
+        "prod:deploy:hosting": "WEBPACK_ENV=prod NODE_ENV=production webpack --env prod; firebase deploy --only hosting"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/roboflow/magic-scissors.git"
+    },
+    "author": "Roboflow",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/roboflow/magic-scissors/issues"
+    },
+    "homepage": "https://github.com/roboflow/magic-scissors#readme"
+}

@@ -1,0 +1,121 @@
+@layer components {
+html, body {
+    background-color: black;
+    font-family: Sohne, Larsseit, HelveticaNeue, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    overflow: hidden;
+}
+
+html,
+html body {
+    min-width: auto;
+}
+
+html body {
+    background-size: cover,auto;
+    background-attachment: fixed,scroll;
+
+    background-position: 0 0,0 0;
+    opacity: 1;
+
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+
+    box-sizing: border-box;
+}
+
+a {
+    color: white;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+h1 {
+    font-size: 29px;
+    font-weight: 500;
+    margin: 10px 0;
+}
+
+.btn {
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 3px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    text-shadow: none;
+    transition: transform 150ms linear;
+}
+
+.btn.cyan {
+    color: #130024;
+    background-color: #00FFCE;
+}
+
+.btn:hover {
+    transform: scale(1.05);
+}
+
+.hidden {
+    display: none;
+}
+
+#preload {
+    display: none;
+}
+
+.swal2-content {
+    text-align: left !important;
+    font-size: 14px !important;
+    padding: 0;
+}
+
+.swal2-content a {
+    color: #5c6ac4;
+}
+
+pre {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    border: 1px solid var(--saf-0);
+    border-radius: 4px;
+    background: rgba(var(--sk_foreground_min,29,28,29),.04);
+    padding: 4px 6px;
+    position: relative;
+}
+
+code, pre {
+    --saf-0: rgba(var(--sk_foreground_low,29,28,29),0.13);
+    font-family: Monaco,Menlo,Consolas,Courier New,monospace!important;
+    font-size: 12px;
+    line-height: 1.50001;
+    font-variant-ligatures: none;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: normal;
+    -webkit-tab-size: 4;
+    -moz-tab-size: 4;
+    tab-size: 4;
+}
+
+code {
+    padding: 2px 3px 1px;
+    border: 1px solid var(--saf-0);
+    border-radius: 3px;
+    background-color: rgba(var(--sk_foreground_min,29,28,29),.04);
+    color: #e01e5a;
+}
+
+}
