@@ -40,8 +40,9 @@
     "scripts": {
         "build:dev": "TAILWIND_MODE=watch WEBPACK_ENV=dev webpack --env dev --watch",
         "build:prod": "TAILWIND_MODE=watch WEBPACK_ENV=prod NODE_ENV=production webpack --env prod --watch",
-        "prod:deploy": "WEBPACK_ENV=prod NODE_ENV=production webpack --env prod; firebase deploy --only hosting,functions",
+        "prod:deploy": "WEBPACK_ENV=prod NODE_ENV=production webpack --env prod; cd image-processing; ./deploy.sh; cd ..; firebase deploy --only hosting,functions",
         "prod:deploy:functions": "firebase deploy --only functions",
+        "prod:deploy:python": "cd image-processing; ./deploy.sh",
         "prod:deploy:hosting": "WEBPACK_ENV=prod NODE_ENV=production webpack --env prod; firebase deploy --only hosting"
     },
     "repository": {

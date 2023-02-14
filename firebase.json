@@ -9,6 +9,14 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "python/**",
+        "run": {
+          "serviceId": "magicscissors-python"
+        }
+      }
     ]
   },
   "emulators": {
