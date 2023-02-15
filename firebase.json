@@ -16,6 +16,14 @@
         "run": {
           "serviceId": "magicscissors-python"
         }
+      },
+      {
+        "source": "query/**",
+        "function": "dynamic"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   },

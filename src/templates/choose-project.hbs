@@ -1,0 +1,36 @@
+<div class="my-4 mx-auto p-4 shadow-md rounded-md max-w-lg bg-white">
+    <h1>✂️ Magic Scissors</h1>
+    <p>
+        Select the dataset with your objects of interest
+        (annotated with bounding boxes) to get started.
+    </p>
+
+    <form id="projectSelectForm">
+    <div>
+        {{#if projects}}
+            <div class="text-sm">
+            {{#each projects}}
+                <div class="mt-2"><input type="radio" name="project" value="{{id}}" id="project_{{id}}" /> <label for="project_{{id}}">{{name}}</label></div>
+            {{/each}}
+            </div>
+        {{else}}
+            <p class="italic">
+                You don't have any projects yet.
+                <a href="https://app.roboflow.com/project/create" target="_blank">Create one</a> to get started.
+            </p>
+        {{/if}}
+    </div>
+
+    <div class="mt-4 mb-5">
+        <div class="block mb-2 font-bold text-sm">Or enter a URL from <a href="" target="_blank">Roboflow Universe</a>:</div>
+        <div><input type="url" id="universeProject" name="universeProject" placeholder="e.g. https://universe.roboflow.com/lenny/raccoons" class="text-lg shadow-sm border border-gray-200 rounded-sm py-1 px-2 w-full" /></div>
+        <div id="errorMessage" class="hidden mt-2 text-red-500 text-xs font-bold"></div>
+    </div>
+
+    <div id="submitButtonContainer">
+        <input type="submit" class="btn cyan" value="Continue" />
+    </div>
+    <div id="loadingContainer" class="hidden">
+        <div class="btn bg-gray-200"><i class="far fa-spin fa-spinner -ml-1 mr-1"></i> Continue</div>
+    </form>
+</div>
