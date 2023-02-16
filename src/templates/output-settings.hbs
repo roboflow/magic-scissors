@@ -1,0 +1,29 @@
+<div class="my-4 mx-auto p-4 shadow-md rounded-md max-w-lg bg-white">
+    <h1>✂️ Magic Scissors</h1>
+    <p>
+        Choose your output settings.
+    </p>
+
+    <form id="outputSettingsForm">
+    <div class="mt-4 mb-5">
+        <div class="optionContainer">
+            <p class="mb-2"><b>Output Size</b> - The number of images to generate.</p>
+            <div class="optionInput">
+                <input 
+                    type="range" 
+                    id="outputSize" 
+                    name="outputSize"
+                    class="w-full" 
+                />
+            </div>
+        </div>
+
+    </div>
+
+    <div id="submitButtonContainer">
+        <input type="submit" class="btn cyan" value="Continue" />
+    </div>
+    <div id="loadingContainer" class="hidden">
+        <div class="btn bg-gray-200"><i class="far fa-spin fa-spinner -ml-1 mr-1"></i> Continue</div>
+    </form>
+</div>

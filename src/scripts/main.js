@@ -58,6 +58,8 @@ $(function () {
 
     page("/", require(__dirname + "/routes/homepage.js")(state));
     page("/choose-project", loading, require(__dirname + "/routes/choose-project.js")(state));
+    page("/choose-backgrounds", loading, require(__dirname + "/routes/choose-backgrounds.js")(state));
+    page("/output-settings", require(__dirname + "/routes/output-settings.js")(state));
 
     page.start();
 });
