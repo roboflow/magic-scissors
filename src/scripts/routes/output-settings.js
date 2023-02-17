@@ -5,6 +5,11 @@ require(__dirname + "/../../../node_modules/ion-rangeslider/css/ion.rangeSlider.
 
 module.exports = function(state) {
     return function (ctx, next) {
+        // if(!state.apiKey || !state.workspace) {
+        //     page("/");
+        //     return;
+        // }
+
         var template = require("../../templates/output-settings.hbs");
         $("body").html(template({
             state: state
@@ -77,7 +82,7 @@ module.exports = function(state) {
                     suffix = "Smaller";
                     modified = position * 9/10 + 0.1;
                     
-                    if(raw) return modified.toFixed(2);
+                    if(raw) return Math.round(modified*100)/100;
 
                     rounded = Math.round((1-modified)*100);
                     if(rounded == 0) return "No Change";
@@ -90,7 +95,7 @@ module.exports = function(state) {
 
                     modified = position * position * 9;
 
-                    if(raw) return (1+modified).toFixed(2);
+                    if(raw) return Math.round((1+modified)*100)/100;
                     rounded = Math.round(modified * 100);
                     if(rounded == 0) return "No Change";
                     if(rounded < 100) return rounded + "% " + suffix;
@@ -100,6 +105,38 @@ module.exports = function(state) {
                 // should never get here
                 return "No Change";
             }
+        });
+
+        $("#outputSettingsForm").submit(function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var ret = {};
+
+            var slider;
+
+            slider = $("#outputSize").data("ionRangeSlider");
+            ret.datasetSize = slider.options.prettify(slider.result.from, true);
+
+            slider = $("#objectsPerImage").data("ionRangeSlider");
+            ret.objectsPerImage = {
+                min: slider.options.prettify(slider.result.from, true),
+                max: slider.options.prettify(slider.result.to, true)
+            };
+            
+            slider = $("#objectSizeVariance").data("ionRangeSlider");
+            ret.sizeVariance = {
+                min: slider.options.prettify(slider.result.from, true),
+                max: slider.options.prettify(slider.result.to, true)
+            };
+
+            slider.options.prettify(slider.result.from, true)
+
+            console.log(JSON.stringify(ret, null, 4));
+
+            // page("/generate-dataset");
+
+            return false;
         });
     }
 };

@@ -53,13 +53,14 @@ $(function () {
         $('body').html(require("../templates/loading.hbs")());
         setTimeout(function() {
             next();
-        }, 1000);
+        }, 0);
     };
 
     page("/", require(__dirname + "/routes/homepage.js")(state));
     page("/choose-project", loading, require(__dirname + "/routes/choose-project.js")(state));
     page("/choose-backgrounds", loading, require(__dirname + "/routes/choose-backgrounds.js")(state));
     page("/output-settings", require(__dirname + "/routes/output-settings.js")(state));
+    page("/generate-dataset", loading, require(__dirname + "/routes/generate-dataset.js")(state));
 
     page.start();
 });
