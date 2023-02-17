@@ -5,19 +5,28 @@
     </p>
 
     <form id="outputSettingsForm">
-    <div class="mt-4 mb-5">
-        <div class="optionContainer">
-            <p class="mb-2"><b>Output Size</b> - The number of images to generate.</p>
-            <div class="optionInput">
-                <input 
-                    type="range" 
-                    id="outputSize" 
-                    name="outputSize"
-                    class="w-full" 
-                />
-            </div>
+    <div class="mt-4 text-sm text-gray-400 gap-6 flex flex-col mb-5">
+        <!-- Output Size Slider -->
+        <div>
+            <p class="mb-2"><b class="text-gray-900">Dataset Size</b> - The number of images to generate.</p>
+            <input 
+                type="range" 
+                id="outputSize" 
+                name="outputSize"
+                class="w-full" 
+            />
         </div>
 
+        <!-- Object Size Variance Slider -->
+        <div>
+            <p class="mb-2"><b class="text-gray-900">Object Size Variance</b> - The amount to shrink or grow the objects of interest from their baseline.</p>
+            <input 
+                type="range" 
+                id="objectSizeVariance" 
+                name="objectSizeVariance"
+                class="w-full"
+            />
+        </div>
     </div>
 
     <div id="submitButtonContainer">
