@@ -5,10 +5,10 @@ require(__dirname + "/../../../node_modules/ion-rangeslider/css/ion.rangeSlider.
 
 module.exports = function(state) {
     return function (ctx, next) {
-        // if(!state.apiKey || !state.workspace) {
-        //     page("/");
-        //     return;
-        // }
+        if(!state.apiKey || !state.workspace) {
+            page("/");
+            return;
+        }
 
         var template = require("../../templates/output-settings.hbs");
         $("body").html(template({
@@ -134,7 +134,7 @@ module.exports = function(state) {
 
             console.log(JSON.stringify(ret, null, 4));
 
-            // page("/generate-dataset");
+            page("/generate-dataset");
 
             return false;
         });
