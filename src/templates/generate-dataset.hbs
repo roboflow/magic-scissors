@@ -1,4 +1,4 @@
-<div class="my-4 mx-auto p-4 shadow-md rounded-md max-w-lg bg-white">
+<div id="generate-dataset-content" class="my-4 mx-auto p-4 shadow-md rounded-md max-w-lg bg-white">
     <h1>✂️ Magic Scissors</h1>
     <p>
         Generating your dataset; this may take a few minutes.
@@ -7,16 +7,21 @@
     <div class="mt-2 flex flex-col gap-y-2">
         {{#each steps}}
             <div>
-                <span class="relative bottom-[0.5px]">
+                <span class="">
                     {{#if inProgress}}
-                        <i class="far fa-spin fa-spinner"></i>
+                        <i class="far fa-fw fa-spin fa-spinner relative bottom-[0.5px]"></i>
                     {{else if completed}}
-                        <i class="far fa-check-circle text-green-500"></i>
+                        <i class="fas fa-fw fa-check-circle text-green-500"></i>
                     {{else}}
-                        <i class="far fa-circle"></i>
+                        <i class="far fa-fw fa-circle"></i>
                     {{/if}}
                 </span>
                 <span class="pl-[3px]">{{step}}</span>
+                {{#if inProgress}}
+                {{#if progress}}
+                    <span class="pl-[3px]">- {{progress.percent}}% {{#if progress.total}}({{progress.current}}/{{progress.total}}){{/if}}</span>
+                {{/if}}
+                {{/if}}
             </div>
         {{/each}}
     </div>

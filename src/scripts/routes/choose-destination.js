@@ -16,7 +16,7 @@ module.exports = function(state) {
                 if(!p.type) p.type = "object-detection";
 
                 if(p.type == "classsification") return null;
-                if(!p.images) return null;
+                // if(!p.images) return null;
 
                 return p;
             }).filter().value();
@@ -26,7 +26,7 @@ module.exports = function(state) {
                 return false;
             };
 
-            var template = require("../../templates/choose-project.hbs");
+            var template = require("../../templates/choose-destination.hbs");
             $("body").html(template({
                 projects: projects
             }));
@@ -53,12 +53,12 @@ module.exports = function(state) {
     
                 if(!selectedProject) return error("Please select a project or enter a project URL.");
 
-                state.objectsOfInterest = {
+                state.backgrounds = {
                     workspace: selectedWorkspace,
                     project: selectedProject
                 };
 
-                page("/choose-backgrounds");
+                page("/output-settings");
 
                 return false;
             });

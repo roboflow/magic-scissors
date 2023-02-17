@@ -9,7 +9,8 @@ module.exports = function(state) {
         }
 
         $.get("https://api.roboflow.com/" + state.workspace, {
-            api_key: state.apiKey
+            api_key: state.apiKey,
+            cacheBuster: Math.random()
         }, "JSON").then(function(response) {
             var projects = _.chain(response.workspace.projects).map(function(p) {
                 if(!p.type) p.type = "object-detection";
@@ -57,7 +58,7 @@ module.exports = function(state) {
                     project: selectedProject
                 };
 
-                page("/output-settings");
+                page("/choose-destination");
 
                 return false;
             });

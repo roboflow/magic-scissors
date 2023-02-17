@@ -111,28 +111,28 @@ module.exports = function(state) {
             e.preventDefault();
             e.stopPropagation();
 
-            var ret = {};
+            var settings = {};
 
             var slider;
 
             slider = $("#outputSize").data("ionRangeSlider");
-            ret.datasetSize = slider.options.prettify(slider.result.from, true);
+            settings.datasetSize = slider.options.prettify(slider.result.from, true);
 
             slider = $("#objectsPerImage").data("ionRangeSlider");
-            ret.objectsPerImage = {
+            settings.objectsPerImage = {
                 min: slider.options.prettify(slider.result.from, true),
                 max: slider.options.prettify(slider.result.to, true)
             };
             
             slider = $("#objectSizeVariance").data("ionRangeSlider");
-            ret.sizeVariance = {
+            settings.sizeVariance = {
                 min: slider.options.prettify(slider.result.from, true),
                 max: slider.options.prettify(slider.result.to, true)
             };
 
             slider.options.prettify(slider.result.from, true)
 
-            console.log(JSON.stringify(ret, null, 4));
+            state.settings = settings;
 
             page("/generate-dataset");
 

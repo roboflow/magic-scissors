@@ -25,7 +25,8 @@ module.exports = function(state) {
         var validateApiKey = function(apiKey) {
             return new Promise(function(resolve, reject) {
                 $.post("https://api.roboflow.com/", {
-                    api_key: apiKey
+                    api_key: apiKey,
+                    cacheBuster: Math.random()
                 }, "JSON").then(function(response) {
                     if(!response || !response.workspace) {
                         reject(response);
