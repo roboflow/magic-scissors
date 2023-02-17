@@ -10,24 +10,42 @@ module.exports = function(state) {
             state: state
         }));
 
-        $("#outputSize").ionRangeSlider({
-            min: 1,
-            max: 1000,
-            from: 500,
-            skin: "round",
-            prettify: function(n) {
+        var exponential = function(pow, shouldRound) {
+            return function(n) {
                 // current position
                 var position = (n / this.max);
 
                 // exponential easing
-                var modified = position * position;
+                var modified = Math.pow(position, pow);
 
                 var output = this.min + Math.round(modified * (this.max - this.min));
+                if(!shouldRound) return output;
+
                 var rounded = output > 10 ? Math.round(output / 10) * 10 : output;
                 if(rounded < this.min) rounded = this.min;
 
                 return rounded;
             }
+        };
+
+        $("#outputSize").ionRangeSlider({
+            min: 1,
+            max: 1000,
+            from: 500,
+            skin: "round",
+            prettify: exponential(2, true)
+        });
+
+        $("#objectsPerImage").ionRangeSlider({
+            min: 1,
+            max: 50,
+            from: 1,
+            to: 10,
+            step: 1,
+            skin: "round",
+            type: "double",
+            drag_interval: true,
+            prettify: exponential(1.5, false)
         });
 
         $("#objectSizeVariance").ionRangeSlider({
@@ -38,6 +56,7 @@ module.exports = function(state) {
             step: 0.01,
             skin: "round",
             type: "double",
+            drag_interval: true,
             prettify: function(n, raw) {
                 // raw = true;
 
