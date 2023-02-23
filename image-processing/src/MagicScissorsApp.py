@@ -136,7 +136,7 @@ class MagicScissorsApp:
 if __name__ == "__main__":
 
     request_data = {
-        "apiKey": "xRLqUXrImvWxPeqD5WFg",
+        "apiKey": "API_KEY",
         "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/1",
         "backgrounds": "magic-scissors/shopping-carts/1",
         "destination": "magic-scissors/synthetic-data",
