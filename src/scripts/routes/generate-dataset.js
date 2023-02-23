@@ -1,5 +1,6 @@
 const async = require("async");
 const page = require("page");
+const _ = require("lodash");
 
 const { getAuth, signInAnonymously } = require("firebase/auth");
 
@@ -9,6 +10,8 @@ module.exports = function(state) {
             page("/");
             return;
         }
+
+        // window.state = state;
 
         var progress = [
             {
@@ -61,21 +64,79 @@ module.exports = function(state) {
             async.parallel([
                 function(cb) {
                     // isolate objects of interest
-                    var duration = 5000 + Math.random() * 5000;
-                    var start = Date.now();
-                    var interval = setInterval(function() {
-                        var elapsed = Date.now() - start;
-                        var percent = elapsed / duration;
-                        if(percent > 1) percent = 1;
-                        progress[0].progress.percent = Math.round(percent * 100);
-                        render();
-                        if(percent >= 1) {
-                            progress[0].inProgress = false;
-                            progress[0].completed = true;
-                            clearInterval(interval);
-                            cb();
+                    $.get([
+                        "https://api.roboflow.com",
+                        state.objectsOfInterest.project
+                    ].join("/"), {
+                        api_key: state.apiKey,        
+                        cacheBuster: Math.random()
+                    }, "JSON").then(function(response) {
+                        if(false && _.get(response, "versions[0].preprocessing.isolate", false)) {
+                            // if most recent version has isolate objects, use that
+                            // TODO - ensure they haven't changed the preprocs / augs to verify we don't need to regen anyway
+                            state.objectsOfInterest.version = response.versions[0].id.split("/").pop();
+                        } else if(response.project) {
+                            // otherwise, generate one first then use that
+                            var preprocs = _.get(response, "project.preprocessing", {});
+                            preprocs.isolate = true;
+
+                            var getVersion = function(version) {
+                                return new Promise(function(resolve, reject) {
+                                    $.get([
+                                        "https://api.roboflow.com",
+                                        state.objectsOfInterest.project,
+                                        version
+                                    ].join("/"), {
+                                        api_key: state.apiKey,
+                                        nocache: Math.random()
+                                    }, "JSON").then(function(response) {
+                                        if(!response || !response.version) {
+                                            setTimeout(function() {
+                                                getVersion(version).then(resolve).catch(reject);
+                                            }, 2500);
+                                            return;
+                                        }
+
+                                        if(response && response.version && !response.version.generating) {
+                                            resolve();
+                                        } else {
+                                            var percent = response.version.progress * 100;
+                                            progress[0].inProgress = true;
+                                            progress[0].progress.current = Math.floor(response.version.progress * response.version.images);
+                                            progress[0].progress.total = response.version.images;
+                                            progress[0].progress.percent = Math.floor(percent);
+                                            render();
+                                            
+                                            setTimeout(function() {
+                                                getVersion(version).then(resolve).catch(reject);
+                                            }, 500);
+                                        }
+                                    });
+                                });
+                            };
+                            
+                            $.ajax({
+                                url: [
+                                    "https://api.roboflow.com", state.objectsOfInterest.project, "generate?api_key=" + state.apiKey
+                                ].join("/"),
+                                dataType: 'json',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    preprocessing: preprocs,
+                                    augmentation: _.get(response, "project.augmentation", {})
+                                })
+                            }).then(function(response) {
+                                if(response && response.version) {
+                                    getVersion(response.version).then(function() {
+                                        progress[0].inProgress = false;
+                                        progress[0].completed = true;
+                                        cb(null);
+                                    });
+                                }
+                            });
                         }
-                    }, 250);
+                    });
                 },
                 function(cb) {
                     // generate backgrounds
