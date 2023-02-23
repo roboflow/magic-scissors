@@ -1,10 +1,36 @@
-import tempfile
+
+import glob
+import random
 from roboflow import Roboflow
+
+
+class ObjectOfInterest:
+    def __init__(self, filename):
+        self.filename = filename
+
+
+class Background:
+    def __init__(self, filename):
+        self.filename = filename
+
+
+class GeneratedImage:
+    def __init__(self, background, object_of_interests):
+        self.background = background
+        self.object_of_interests = object_of_interests
 
 
 class MagicScissorsApp:
 
     def __init__(self, request_parameters, working_dir):
+
+        # these will get populated with the objects of interest and backgrounds
+        # after we download the respective versions holding the image and annotation data
+        # for them
+        self.objects_of_interest = []
+        self.backgrounds = []
+        self.generated_images = []
+
         try:
             self.api_key = request_parameters["apiKey"]
 
@@ -51,7 +77,15 @@ class MagicScissorsApp:
 
         rf = Roboflow(api_key=self.api_key)
         v = rf.workspace(workspace).project(project).version(int(version))
+
+        # TODO: want to download coco here, but the call fails because it cant find a yamp file
         v.download("yolov5pytorch", location=location)
+
+        # add all the images as objects of interest
+        # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
+        for f in glob.glob(location+"/train/images/*"):
+            obj = ObjectOfInterest(f)
+            self.objects_of_interest.append(obj)
 
     def download_backgrounds(self):
         workspace, project, version = self.backgrounds_version_url.split("/")
@@ -60,7 +94,43 @@ class MagicScissorsApp:
 
         rf = Roboflow(api_key=self.api_key)
         v = rf.workspace(workspace).project(project).version(int(version))
+
+        # TODO: want to download coco here, but the call fails because it cant find a yamp file
         v.download("yolov5pytorch", location=location)
+
+        # add all the images as objects of interest
+        # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
+        for f in glob.glob(location+"/train/images/*"):
+            bg = Background(f)
+            self.backgrounds.append(bg)
+
+    def generate_image(self, bg, objects):
+
+        print("generate image with background", bg.filename)
+        for obj in objects:
+            print("  pasting object", obj.filename)
+
+        # TODO: actually generate the images
+
+        return GeneratedImage(bg, objects)
+
+    def generate_dataset(self):
+        print("generating dataset")
+
+        for i in range(0, self.dataset_size):
+            num_objects = random.randint(
+                self.min_objects_per_image, self.max_objects_per_image)
+
+            background = random.choice(self.backgrounds)
+            objects = random.choices(self.objects_of_interest, k=num_objects)
+
+            generated_image = self.generate_image(background, objects)
+            self.generated_images.append(generated_image)
+
+    def upload_dataset_to_destination(self):
+        print("uploading dataset to destination")
+        for generated_image in self.generated_images:
+            print("  upload image...")
 
 
 if __name__ == "__main__":
@@ -88,5 +158,5 @@ if __name__ == "__main__":
     magic_scissors = MagicScissorsApp(request_data, working_dir)
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
-    # magic_scissors.generate_dataset()
-    # magic_scissors.upload_dataset_to_destination()
+    magic_scissors.generate_dataset()
+    magic_scissors.upload_dataset_to_destination()
