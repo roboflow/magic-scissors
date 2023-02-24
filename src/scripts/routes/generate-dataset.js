@@ -71,15 +71,26 @@ module.exports = function(state) {
                         api_key: state.apiKey,        
                         cacheBuster: Math.random()
                     }, "JSON").then(function(response) {
-                        if(false && _.get(response, "versions[0].preprocessing.isolate", false)) {
+                        var preprocs = _.get(response, "project.preprocessing", {});
+                        preprocs.isolate = true;
+                        var augs = _.get(response, "project.augmentation", {});
+
+                        var matchingVersion = _.find(response.versions, function(version) {
+                            // if an existing version has the same preprocs and augs, use it
+                            return _.isEqual(version.preprocessing, preprocs) && _.isEqual(version.augmentation, augs);
+                        });
+
+                        debugger;
+
+                        if(matchingVersion) {
                             // if most recent version has isolate objects, use that
                             // TODO - ensure they haven't changed the preprocs / augs to verify we don't need to regen anyway
-                            state.objectsOfInterest.version = response.versions[0].id.split("/").pop();
+                            state.objectsOfInterest.version = matchingVersion.id.split("/").pop();
+                            progress[0].inProgress = false;
+                            progress[0].completed = true;
+                            cb(null);
                         } else if(response.project) {
                             // otherwise, generate one first then use that
-                            var preprocs = _.get(response, "project.preprocessing", {});
-                            preprocs.isolate = true;
-
                             var getVersion = function(version) {
                                 return new Promise(function(resolve, reject) {
                                     $.get([
@@ -124,7 +135,7 @@ module.exports = function(state) {
                                 contentType: 'application/json',
                                 data: JSON.stringify({
                                     preprocessing: preprocs,
-                                    augmentation: _.get(response, "project.augmentation", {})
+                                    augmentation: augs
                                 })
                             }).then(function(response) {
                                 if(response && response.version) {
