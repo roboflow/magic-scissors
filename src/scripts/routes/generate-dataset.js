@@ -22,21 +22,35 @@ module.exports = function(state) {
                 }
             },
             {
-                step: "Exporting Backgrounds",
+                step: "Processing Backgrounds",
                 inProgress: true,
                 progress: {
                     percent: 0
                 }
             },
             {
-                step: "Generating Images",
+                step: "Zipping Objects of Interest",
                 todo: true,
                 progress: {
-                    current: 0,
-                    total: state.settings?.datasetSize || 100,
-                    
                     percent: 0
                 }
+            },
+            {
+                step: "Zipping Backgrounds",
+                todo: true,
+                progress: {
+                    percent: 0
+                }
+            },
+            {
+                step: "Creating Synthetic Dataset",
+                todo: true,
+                // progress: {
+                //     current: 0,
+                //     total: state.settings?.datasetSize || 100,
+                    
+                //     percent: 0
+                // }
             }
         ];
 
@@ -135,6 +149,7 @@ module.exports = function(state) {
                                 })
                             }).then(function(response) {
                                 if(response && response.version) {
+                                    state[identifier].version = response.version;
                                     getVersion(response.version).then(function() {
                                         progress[index].inProgress = false;
                                         progress[index].completed = true;
@@ -143,6 +158,53 @@ module.exports = function(state) {
                                 }
                             });
                         }
+                    });
+                };
+            };
+
+            var exportCOCO = function(index, identifier) {
+                var project = state[identifier].project;
+                var version = state[identifier].version;
+
+                return function(cb) {
+                    var getExport = function() {
+                        return new Promise(function(resolve, reject) {
+                            $.get([
+                                "https://api.roboflow.com",
+                                project,
+                                version,
+                                "coco"
+                            ].join("/"), {
+                                api_key: state.apiKey,
+                                nocache: Math.random()
+                            }, "JSON").then(function(response) {
+                                if(!response || !response.progress) {
+                                    setTimeout(function() {
+                                        getExport().then(resolve).catch(reject);
+                                    }, 2500);
+                                    return;
+                                }
+
+                                if(response.progress >= 1) {
+                                    resolve();
+                                } else {
+                                    var percent = response.version.progress * 100;
+                                    progress[index].inProgress = true;
+                                    progress[index].progress.percent = Math.floor(percent);
+                                    render();
+                                    
+                                    setTimeout(function() {
+                                        getExport().then(resolve).catch(reject);
+                                    }, 500);
+                                }
+                            });
+                        });
+                    };
+
+                    getExport().then(function() {
+                        progress[index].inProgress = false;
+                        progress[index].completed = true;
+                        cb(null);
                     });
                 };
             };
@@ -162,10 +224,36 @@ module.exports = function(state) {
                     return [preprocs, augs];
                 })
             ], function() {
-                // generate images
-                progress[2].todo = false;
-                progress[2].inProgress = true;
-                render();
+                async.parallel([
+                    exportCOCO(2, "objectsOfInterest"),
+                    exportCOCO(3, "backgrounds")
+                ], function() {
+                    // generate images
+                    progress[4].todo = false;
+                    progress[4].inProgress = true;
+                    render();
+
+                    $.ajax({
+                        url: [
+                            "/python/go"
+                        ].join("/"),
+                        dataType: 'json',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            "apiKey": state.apiKey,
+                            "objectsOfInterest": [state.objectsOfInterest.workspace, state.objectsOfInterest.project, state.objectsOfInterest.version].join("/"),
+                            "backgrounds": [state.backgrounds.workspace, state.backgrounds.project, state.backgrounds.version].join("/"),
+                            "destination": [state.destination.workspace, state.destination.project].join("/"),
+                            "settings": state.settings
+                        })
+                    }).then(function(response) {
+                        progress[4].inProgress = false;
+                        progress[4].completed = true;
+                        render();
+                        // all done!
+                    });
+                });
             });
         });
     };
