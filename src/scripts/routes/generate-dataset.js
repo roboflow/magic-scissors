@@ -61,33 +61,29 @@ module.exports = function(state) {
             
             render();
 
-            async.parallel([
-                function(cb) {
-                    // isolate objects of interest
+            var generateDataset = function(index, identifier, getPreprocsAndAugs) {
+                var project = state[identifier].project;
+                return function(cb) {
                     $.get([
                         "https://api.roboflow.com",
-                        state.objectsOfInterest.project
+                        project
                     ].join("/"), {
                         api_key: state.apiKey,        
                         cacheBuster: Math.random()
                     }, "JSON").then(function(response) {
-                        var preprocs = _.get(response, "project.preprocessing", {});
-                        preprocs.isolate = true;
-                        var augs = _.get(response, "project.augmentation", {});
+                        var [preprocs, augs] = getPreprocsAndAugs(response);
 
                         var matchingVersion = _.find(response.versions, function(version) {
                             // if an existing version has the same preprocs and augs, use it
                             return _.isEqual(version.preprocessing, preprocs) && _.isEqual(version.augmentation, augs);
                         });
 
-                        debugger;
-
                         if(matchingVersion) {
                             // if most recent version has isolate objects, use that
                             // TODO - ensure they haven't changed the preprocs / augs to verify we don't need to regen anyway
-                            state.objectsOfInterest.version = matchingVersion.id.split("/").pop();
-                            progress[0].inProgress = false;
-                            progress[0].completed = true;
+                            state[identifier].version = matchingVersion.id.split("/").pop();
+                            progress[index].inProgress = false;
+                            progress[index].completed = true;
                             cb(null);
                         } else if(response.project) {
                             // otherwise, generate one first then use that
@@ -95,7 +91,7 @@ module.exports = function(state) {
                                 return new Promise(function(resolve, reject) {
                                     $.get([
                                         "https://api.roboflow.com",
-                                        state.objectsOfInterest.project,
+                                        project,
                                         version
                                     ].join("/"), {
                                         api_key: state.apiKey,
@@ -112,10 +108,10 @@ module.exports = function(state) {
                                             resolve();
                                         } else {
                                             var percent = response.version.progress * 100;
-                                            progress[0].inProgress = true;
-                                            progress[0].progress.current = Math.floor(response.version.progress * response.version.images);
-                                            progress[0].progress.total = response.version.images;
-                                            progress[0].progress.percent = Math.floor(percent);
+                                            progress[index].inProgress = true;
+                                            progress[index].progress.current = Math.floor(response.version.progress * response.version.images);
+                                            progress[index].progress.total = response.version.images;
+                                            progress[index].progress.percent = Math.floor(percent);
                                             render();
                                             
                                             setTimeout(function() {
@@ -128,7 +124,7 @@ module.exports = function(state) {
                             
                             $.ajax({
                                 url: [
-                                    "https://api.roboflow.com", state.objectsOfInterest.project, "generate?api_key=" + state.apiKey
+                                    "https://api.roboflow.com", project, "generate?api_key=" + state.apiKey
                                 ].join("/"),
                                 dataType: 'json',
                                 type: 'POST',
@@ -140,33 +136,31 @@ module.exports = function(state) {
                             }).then(function(response) {
                                 if(response && response.version) {
                                     getVersion(response.version).then(function() {
-                                        progress[0].inProgress = false;
-                                        progress[0].completed = true;
+                                        progress[index].inProgress = false;
+                                        progress[index].completed = true;
                                         cb(null);
                                     });
                                 }
                             });
                         }
                     });
-                },
-                function(cb) {
-                    // generate backgrounds
-                    var duration = 2000 + Math.random() * 2000;
-                    var start = Date.now();
-                    var interval = setInterval(function() {
-                        var elapsed = Date.now() - start;
-                        var percent = elapsed / duration;
-                        if(percent > 1) percent = 1;
-                        progress[1].progress.percent = Math.round(percent * 100);
-                        render();
-                        if(percent >= 1) {
-                            progress[1].inProgress = false;
-                            progress[1].completed = true;
-                            clearInterval(interval);
-                            cb();
-                        }
-                    }, 250);
-                }
+                };
+            };
+
+            async.parallel([
+                // isolate objects of interest
+                generateDataset(0, "objectsOfInterest", function(response) {
+                    var preprocs = _.get(response, "project.preprocessing", {});
+                    preprocs.isolate = true;
+                    var augs = _.get(response, "project.augmentation", {});
+                    return [preprocs, augs];
+                }),
+                // generate backgrounds
+                generateDataset(1, "backgrounds", function(response) {
+                    var preprocs = { "auto-orient": true };
+                    var augs = {};
+                    return [preprocs, augs];
+                })
             ], function() {
                 // generate images
                 progress[2].todo = false;

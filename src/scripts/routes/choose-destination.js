@@ -53,7 +53,7 @@ module.exports = function(state) {
     
                 if(!selectedProject) return error("Please select a project or enter a project URL.");
 
-                state.backgrounds = {
+                state.destination = {
                     workspace: selectedWorkspace,
                     project: selectedProject
                 };
