@@ -1,16 +1,25 @@
 import glob
 import random
 from roboflow import Roboflow
+import numpy as np
+import json
+import generate_image
 
 
 class ObjectOfInterest:
-    def __init__(self, filename):
+    def __init__(self, filename, polygon, classname, split):
         self.filename = filename
+        self.fpolygon = polygon
+        self.classname = classname
+        self.split = split
 
 
 class Background:
-    def __init__(self, filename):
+    def __init__(self, filename, polygon, classname, split):
         self.filename = filename
+        self.polygon = polygon
+        self.classname = classname
+        self.split = split
 
 
 class GeneratedImage:
@@ -81,10 +90,47 @@ class MagicScissorsApp:
         v.download("coco", location=location)
 
         # add all the images as objects of interest
-        # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
-        for f in glob.glob(location + "/train/images/*"):
-            obj = ObjectOfInterest(f)
-            self.objects_of_interest.append(obj)
+        train_objects = self.load_objects_of_interest_from_coco("train")
+        test_objects = self.load_objects_of_interest_from_coco("test")
+        valid_objects = self.load_objects_of_interest_from_coco("valid")
+
+        self.objects_of_interest.extend(train_objects)
+        self.objects_of_interest.extend(test_objects)
+        self.objects_of_interest.extend(valid_objects)
+
+    def load_objects_of_interest_from_coco(self, split):
+        folder = self.working_dir + "/objects_of_interest/" + split
+        try:
+            json_file = open(folder + "/_annotations.coco.json")
+            annotation_data = json.load(json_file)
+        except:
+            return []
+
+        images = annotation_data["images"]
+        annotations = annotation_data["annotations"]
+        categories = annotation_data["categories"]
+
+        objects = []
+
+        for img in images:
+            image_id = img["id"]
+            filename = folder + "/" + img["file_name"]
+            annotation = next(
+                (a for a in annotations if a["image_id"] == image_id), None
+            )
+            if not annotation:
+                # print("no annotation for image:", image_id, filename)
+                continue
+
+            classname = categories[annotation["category_id"]]["name"]
+            segmentation = annotation["segmentation"]
+            polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
+
+            obj = ObjectOfInterest(filename, polygon, classname, split)
+            # print("adding object of interest", filename, polygon, classname)
+            objects.append(obj)
+
+        return objects
 
     def download_backgrounds(self):
         workspace, project, version = self.backgrounds_version_url.split("/")
@@ -99,19 +145,47 @@ class MagicScissorsApp:
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
-        for f in glob.glob(location + "/train/images/*"):
-            bg = Background(f)
-            self.backgrounds.append(bg)
+        train_backgrounds = self.load_backgrounds_from_coco("train")
+        test_backgrounds = self.load_backgrounds_from_coco("test")
+        valid_backgrounds = self.load_backgrounds_from_coco("valid")
 
-    def generate_image(self, bg, objects):
+        self.backgrounds.extend(train_backgrounds)
+        self.backgrounds.extend(test_backgrounds)
+        self.backgrounds.extend(valid_backgrounds)
 
-        print("generate image with background", bg.filename)
-        for obj in objects:
-            print("  pasting object", obj.filename)
+    def load_backgrounds_from_coco(self, split):
+        folder = self.working_dir + "/backgrounds/" + split
+        try:
+            json_file = open(folder + "/_annotations.coco.json")
+            annotation_data = json.load(json_file)
+        except:
+            return []
 
-        # TODO: actually generate the images
+        images = annotation_data["images"]
+        annotations = annotation_data["annotations"]
+        categories = annotation_data["categories"]
 
-        return GeneratedImage(bg, objects)
+        backgrounds = []
+
+        for img in images:
+            image_id = img["id"]
+            filename = folder + "/" + img["file_name"]
+            annotation = next(
+                (a for a in annotations if a["image_id"] == image_id), None
+            )
+            if not annotation:
+                # print("no annotation for image:", image_id, filename)
+                continue
+
+            classname = categories[annotation["category_id"]]["name"]
+            segmentation = annotation["segmentation"]
+            polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
+
+            obj = Background(filename, polygon, classname, split)
+            # print("adding object of interest", filename, polygon, classname)
+            backgrounds.append(obj)
+
+        return backgrounds
 
     def generate_dataset(self):
         print("generating dataset")
@@ -124,7 +198,7 @@ class MagicScissorsApp:
             background = random.choice(self.backgrounds)
             objects = random.choices(self.objects_of_interest, k=num_objects)
 
-            generated_image = self.generate_image(background, objects)
+            generated_image = generate_image.generate_image(background, objects)
             self.generated_images.append(generated_image)
 
     def upload_dataset_to_destination(self):
@@ -154,5 +228,5 @@ if __name__ == "__main__":
     magic_scissors = MagicScissorsApp(request_data, working_dir)
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
-    magic_scissors.generate_dataset()
-    magic_scissors.upload_dataset_to_destination()
+    # magic_scissors.generate_dataset()
+    # magic_scissors.upload_dataset_to_destination()
