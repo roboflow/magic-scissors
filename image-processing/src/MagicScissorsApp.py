@@ -1,4 +1,3 @@
-
 import glob
 import random
 from roboflow import Roboflow
@@ -21,7 +20,6 @@ class GeneratedImage:
 
 
 class MagicScissorsApp:
-
     def __init__(self, request_parameters, working_dir):
 
         # these will get populated with the objects of interest and backgrounds
@@ -53,7 +51,8 @@ class MagicScissorsApp:
         except Exception as e:
             print("Error parsing request parameters", e)
             raise Exception(
-                "failed to initialize MagicScissorsApp from request parameters")
+                "failed to initialize MagicScissorsApp from request parameters"
+            )
 
         self.working_dir = working_dir
 
@@ -79,11 +78,11 @@ class MagicScissorsApp:
         v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("yolov5pytorch", location=location)
+        v.download("coco", location=location)
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
-        for f in glob.glob(location+"/train/images/*"):
+        for f in glob.glob(location + "/train/images/*"):
             obj = ObjectOfInterest(f)
             self.objects_of_interest.append(obj)
 
@@ -96,11 +95,11 @@ class MagicScissorsApp:
         v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("yolov5pytorch", location=location)
+        v.download("coco", location=location)
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
-        for f in glob.glob(location+"/train/images/*"):
+        for f in glob.glob(location + "/train/images/*"):
             bg = Background(f)
             self.backgrounds.append(bg)
 
@@ -119,7 +118,8 @@ class MagicScissorsApp:
 
         for i in range(0, self.dataset_size):
             num_objects = random.randint(
-                self.min_objects_per_image, self.max_objects_per_image)
+                self.min_objects_per_image, self.max_objects_per_image
+            )
 
             background = random.choice(self.backgrounds)
             objects = random.choices(self.objects_of_interest, k=num_objects)
@@ -135,22 +135,18 @@ class MagicScissorsApp:
 
 if __name__ == "__main__":
 
+    import os
+
     request_data = {
-        "apiKey": "API_KEY",
+        "apiKey": os.environ["API_KEY"],
         "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/1",
         "backgrounds": "magic-scissors/shopping-carts/1",
         "destination": "magic-scissors/synthetic-data",
         "settings": {
             "datasetSize": 250,
-            "objectsPerImage": {
-                "min": 1,
-                "max": 5
-            },
-            "sizeVariance": {
-                "min": 0.9,
-                "max": 1.1
-            }
-        }
+            "objectsPerImage": {"min": 1, "max": 5},
+            "sizeVariance": {"min": 0.9, "max": 1.1},
+        },
     }
 
     working_dir = "/Users/hansent/Desktop/ms_temp"
