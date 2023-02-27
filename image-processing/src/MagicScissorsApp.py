@@ -4,12 +4,13 @@ from roboflow import Roboflow
 import numpy as np
 import json
 import generate_image
+import cv2
 
 
 class ObjectOfInterest:
     def __init__(self, filename, polygon, classname, split):
         self.filename = filename
-        self.fpolygon = polygon
+        self.polygon = polygon
         self.classname = classname
         self.split = split
 
@@ -83,11 +84,11 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/objects_of_interest"
 
-        rf = Roboflow(api_key=self.api_key)
-        v = rf.workspace(workspace).project(project).version(int(version))
+        # rf = Roboflow(api_key=self.api_key)
+        # v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("coco", location=location)
+        # v.download("coco", location=location)
 
         # add all the images as objects of interest
         train_objects = self.load_objects_of_interest_from_coco("train")
@@ -137,11 +138,11 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/backgrounds"
 
-        rf = Roboflow(api_key=self.api_key)
-        v = rf.workspace(workspace).project(project).version(int(version))
+        # rf = Roboflow(api_key=self.api_key)
+        # v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("coco", location=location)
+        # v.download("coco", location=location)
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
@@ -190,15 +191,21 @@ class MagicScissorsApp:
     def generate_dataset(self):
         print("generating dataset")
 
-        for i in range(0, self.dataset_size):
-            num_objects = random.randint(
-                self.min_objects_per_image, self.max_objects_per_image
-            )
+        for i in range(0, 1):
+            # for i in range(0, self.dataset_size):
+            # num_objects = random.randint(
+            #     self.min_objects_per_image, self.max_objects_per_image
+            # )
+
+            num_objects = 10
 
             background = random.choice(self.backgrounds)
             objects = random.choices(self.objects_of_interest, k=num_objects)
 
-            generated_image = generate_image.generate_image(background, objects)
+            generated_image = generate_image.generate_image(
+                background, objects, self.min_size_variance, self.max_size_variance
+            )
+
             self.generated_images.append(generated_image)
 
     def upload_dataset_to_destination(self):
@@ -219,7 +226,7 @@ if __name__ == "__main__":
         "settings": {
             "datasetSize": 250,
             "objectsPerImage": {"min": 1, "max": 5},
-            "sizeVariance": {"min": 0.9, "max": 1.1},
+            "sizeVariance": {"min": 0.1, "max": 0.3},
         },
     }
 
@@ -228,5 +235,6 @@ if __name__ == "__main__":
     magic_scissors = MagicScissorsApp(request_data, working_dir)
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
-    # magic_scissors.generate_dataset()
+    magic_scissors.generate_dataset()
     # magic_scissors.upload_dataset_to_destination()
+    cv2.destroyAllWindows()

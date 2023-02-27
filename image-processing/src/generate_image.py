@@ -1,6 +1,9 @@
 from supervision.detection.utils import generate_2d_mask
 import cv2
 import numpy as np
+import random
+from shapely.geometry import Point, Polygon
+
 
 import MagicScissorsApp
 
@@ -48,7 +51,27 @@ def copy_paste(
     return target_image
 
 
-def generate_image(bg, objects):
+def random_point_in_background(bg, max_x, max_y):
+    polygon = Polygon(bg.polygon)
+    minx, miny, maxx, maxy = polygon.bounds
+    maxx = min(maxx, max_x)
+    maxy = min(maxy, max_y)
+
+    attempt = 0
+    # print("get random point in background", maxx, maxy)
+    while True:
+        pnt = Point(np.random.uniform(minx, maxx), np.random.uniform(miny, maxy))
+        if polygon.contains(pnt):
+            # print("found random point", pnt, pnt.x, pnt.y)
+            return [pnt.x, pnt.y]
+        if attempt > 100:
+            return [
+                np.random.uniform(0, max_x),
+                np.random.uniform(0, max_y),
+            ]
+
+
+def generate_image(bg, objects, scale_min, scale_max):
 
     print("generate image with background", bg.filename)
 
@@ -56,32 +79,18 @@ def generate_image(bg, objects):
 
     for obj in objects:
         obj_image = cv2.imread(obj.filename)
-        obj_annotation = obj.get_annotation_data()
 
-        polygon = obj_annotation["polygon"]
+        polygon = obj.polygon
         print("pasting object", obj.filename)
-        result = copy_paste(obj_image, polygon, background_image)
+        scale = random.uniform(scale_min, scale_max)
+
+        max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
+        max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
+
+        x, y = random_point_in_background(bg, max_x, max_y)
+        # print("copy paste:", polygon, scale, x, y)
+        result = copy_paste(obj_image, polygon, background_image, scale, int(x), int(y))
         cv2.imshow("output", result)
         cv2.waitKey(0)
 
     return MagicScissorsApp.GeneratedImage(bg, objects)
-
-
-if __name__ == "__main__":
-
-    bg_src = "/Users/hansent/Desktop/ms_temp/backgrounds/train/images/cart1_png.rf.522660df56f449c4b3fa55909808ac6c.jpg"
-    bg_label = "/Users/hansent/Desktop/ms_temp/backgrounds/train/images/cart1_png.rf.522660df56f449c4b3fa55909808ac6c.txt"
-
-    bg = MagicScissorsApp.Background(bg_src)
-
-    objects = [
-        MagicScissorsApp.ObjectOfInterest(
-            "/Users/hansent/Desktop/ms_temp/objects_of_interest/train/images/IMG_1191_rotated90_jpg.rf.3a2caf871efdbfaa37d3eb98334caa65.jpg"
-        ),
-        MagicScissorsApp.ObjectOfInterest(
-            "/Users/hansent/Desktop/ms_temp/objects_of_interest/train/images/IMG_1754_rotated90_jpg.rf.6c029f2d09b9e0b4cc38393d2ab943c4.jpg"
-        ),
-    ]
-
-    generate_image(bg, objects)
-    cv2.destroyAllWindows()
