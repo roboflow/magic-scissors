@@ -5,6 +5,7 @@ import numpy as np
 import json
 import generate_image
 import cv2
+import os
 
 
 class ObjectOfInterest:
@@ -85,11 +86,11 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/objects_of_interest"
 
-        # rf = Roboflow(api_key=self.api_key)
-        # v = rf.workspace(workspace).project(project).version(int(version))
+        rf = Roboflow(api_key=self.api_key)
+        v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        # v.download("coco", location=location)
+        v.download("coco", location=location)
 
         # add all the images as objects of interest
         train_objects = self.load_objects_of_interest_from_coco("train")
@@ -139,11 +140,11 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/backgrounds"
 
-        # rf = Roboflow(api_key=self.api_key)
-        # v = rf.workspace(workspace).project(project).version(int(version))
+        rf = Roboflow(api_key=self.api_key)
+        v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        # v.download("coco", location=location)
+        v.download("coco", location=location)
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
@@ -228,8 +229,6 @@ class MagicScissorsApp:
 
 
 if __name__ == "__main__":
-
-    import os
 
     request_data = {
         "apiKey": os.environ["API_KEY"],
