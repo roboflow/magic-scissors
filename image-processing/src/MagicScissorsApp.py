@@ -6,6 +6,7 @@ import json
 import generate_image
 import cv2
 import os
+from shapely.geometry import Point, Polygon
 
 
 class ObjectOfInterest:
@@ -25,10 +26,93 @@ class Background:
 
 
 class GeneratedImage:
-    def __init__(self, filename, background, object_of_interests):
-        self.filename = filename
+    def __init__(
+        self, identifier, background, object_of_interests, scale_min, scale_max
+    ):
+        self.identifier = identifier
         self.background = background
         self.object_of_interests = object_of_interests
+
+        self.image_data = None
+        self.annotations = []
+
+        background_image = cv2.imread(self.background.filename)
+
+        for obj in self.object_of_interests:
+            obj_image = cv2.imread(obj.filename)
+
+            polygon = obj.polygon
+            print("pasting object", obj.filename)
+            scale = random.uniform(scale_min, scale_max)
+
+            max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
+            max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
+
+            x, y = generate_image.random_point_in_background(
+                self.background, max_x, max_y
+            )
+            # print("copy paste:", polygon, scale, x, y)
+            self.image_data = generate_image.copy_paste(
+                obj_image, polygon, background_image, scale, int(x), int(y)
+            )
+
+            new_polygon = []
+            for p in obj.polygon:
+                new_x = (p[0] * scale) + int(x)
+                new_y = (p[1] * scale) + int(y)
+                new_polygon.append([new_x, new_y])
+
+            self.annotations.append(
+                {"polygon": new_polygon, "classname": obj.classname}
+            )
+
+    def to_coco_json(self):
+        categories = []
+        category_counter = 0
+        category_by_name = {}
+        for a in self.annotations:
+            c = {
+                "id": category_counter,
+                "name": a["classname"],
+                "supercategory": "none",
+            }
+            category_counter += 1
+
+            category_by_name[a["classname"]] = c
+            categories.append(c)
+
+        annotations = []
+        annotation_counter = 0
+        for a in self.annotations:
+            polygon = Polygon(a["polygon"])
+            minx, miny, maxx, maxy = polygon.bounds
+
+            flattened_polygon = [item for sublist in a["polygon"] for item in sublist]
+            a = {
+                "id": annotation_counter,
+                "image_id": 0,
+                "category_id": category_by_name[a["classname"]]["id"],
+                "bbox": [minx, miny, maxx, maxy],
+                "area": 0,
+                "segmentation": [flattened_polygon],
+                "iscrowd": 0,
+            }
+            annotation_counter += 1
+            annotations.append(a)
+
+        return {
+            "categories": categories,
+            "images": [
+                {
+                    "id": 0,
+                    "license": 1,
+                    "file_name": self.identifier + ".jpg",
+                    "height": self.image_data.shape[1],
+                    "width": self.image_data.shape[0],
+                }
+            ],
+            "annotations": annotations,
+        }
 
 
 class MagicScissorsApp:
@@ -86,11 +170,11 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/objects_of_interest"
 
-        rf = Roboflow(api_key=self.api_key)
-        v = rf.workspace(workspace).project(project).version(int(version))
+        # rf = Roboflow(api_key=self.api_key)
+        # v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("coco", location=location)
+        # v.download("coco", location=location)
 
         # add all the images as objects of interest
         train_objects = self.load_objects_of_interest_from_coco("train")
@@ -140,21 +224,21 @@ class MagicScissorsApp:
 
         location = self.working_dir + "/backgrounds"
 
-        rf = Roboflow(api_key=self.api_key)
-        v = rf.workspace(workspace).project(project).version(int(version))
+        # rf = Roboflow(api_key=self.api_key)
+        # v = rf.workspace(workspace).project(project).version(int(version))
 
         # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        v.download("coco", location=location)
+        # v.download("coco", location=location)
 
         # add all the images as objects of interest
         # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
         train_backgrounds = self.load_backgrounds_from_coco("train")
-        test_backgrounds = self.load_backgrounds_from_coco("test")
-        valid_backgrounds = self.load_backgrounds_from_coco("valid")
+        # test_backgrounds = self.load_backgrounds_from_coco("test")
+        # valid_backgrounds = self.load_backgrounds_from_coco("valid")
 
         self.backgrounds.extend(train_backgrounds)
-        self.backgrounds.extend(test_backgrounds)
-        self.backgrounds.extend(valid_backgrounds)
+        # self.backgrounds.extend(test_backgrounds)
+        # self.backgrounds.extend(valid_backgrounds)
 
     def load_backgrounds_from_coco(self, split):
         folder = self.working_dir + "/backgrounds/" + split
@@ -207,18 +291,23 @@ class MagicScissorsApp:
             background = random.choice(self.backgrounds)
             objects = random.choices(self.objects_of_interest, k=num_objects)
 
-            print("objects per image:", num_objects, len(objects))
-            # TODO: need to get transformed annotation data back here and then generate annotation data to upload
-            image_data = generate_image.generate_image(
-                background, objects, self.min_size_variance, self.max_size_variance
+            generated_image = GeneratedImage(
+                str(i),
+                background,
+                objects,
+                self.min_size_variance,
+                self.max_size_variance,
             )
 
-            filename = folder + "/" + str(i) + ".jpg"
+            print("write output file:", generated_image.identifier)
 
-            print("write output file:", filename)
-            cv2.imwrite(filename, image_data)
+            cv2.imwrite(
+                folder + "/" + generated_image.identifier + ".jpg",
+                generated_image.image_data,
+            )
 
-            generated_image = GeneratedImage(filename, background, objects)
+            with open(folder + "/" + generated_image.identifier + ".json", "w") as f:
+                json.dump(generated_image.to_coco_json(), f)
 
             self.generated_images.append(generated_image)
 

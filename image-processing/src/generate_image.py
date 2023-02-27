@@ -71,29 +71,40 @@ def random_point_in_background(bg, max_x, max_y):
             ]
 
 
-def generate_image(bg, objects, scale_min, scale_max):
+# def generate_image(filename, bg, objects, scale_min, scale_max):
 
-    print("generate image with background", bg.filename, len(objects))
+#     print("generate image with background", bg.filename, len(objects))
 
-    background_image = cv2.imread(bg.filename)
+#     background_image = cv2.imread(bg.filename)
 
-    for obj in objects:
-        obj_image = cv2.imread(obj.filename)
+#     new_annotations = []
 
-        polygon = obj.polygon
-        print("pasting object", obj.filename)
-        scale = random.uniform(scale_min, scale_max)
+#     generated_image = MagicScissorsApp.GeneratedImage(filename, bg, objects)
 
-        max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
-        max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
+#     for obj in objects:
+#         obj_image = cv2.imread(obj.filename)
 
-        x, y = random_point_in_background(bg, max_x, max_y)
-        # print("copy paste:", polygon, scale, x, y)
-        background_image = copy_paste(
-            obj_image, polygon, background_image, scale, int(x), int(y)
-        )
-    return background_image
-    # cv2.imshow("output", result)
-    # cv2.waitKey(0)
+#         polygon = obj.polygon
+#         print("pasting object", obj.filename)
+#         scale = random.uniform(scale_min, scale_max)
 
-    # return MagicScissorsApp.GeneratedImage(bg, objects)
+#         max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
+#         max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
+
+#         x, y = random_point_in_background(bg, max_x, max_y)
+#         # print("copy paste:", polygon, scale, x, y)
+#         generated_image.image_data = copy_paste(
+#             obj_image, polygon, background_image, scale, int(x), int(y)
+#         )
+
+#         new_polygon = []
+#         for p in obj.polygon:
+#             new_x = (p[0] * scale) + int(x)
+#             new_y = (p[1] * scale) + int(y)
+#             new_polygon.append([new_x, new_y])
+
+#         generated_image.annotations.append(
+#             {"polygon": new_polygon, "classname": obj.classname}
+#         )
+
+#     return generated_image
