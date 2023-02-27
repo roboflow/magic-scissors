@@ -73,7 +73,7 @@ def random_point_in_background(bg, max_x, max_y):
 
 def generate_image(bg, objects, scale_min, scale_max):
 
-    print("generate image with background", bg.filename)
+    print("generate image with background", bg.filename, len(objects))
 
     background_image = cv2.imread(bg.filename)
 
@@ -89,8 +89,11 @@ def generate_image(bg, objects, scale_min, scale_max):
 
         x, y = random_point_in_background(bg, max_x, max_y)
         # print("copy paste:", polygon, scale, x, y)
-        result = copy_paste(obj_image, polygon, background_image, scale, int(x), int(y))
-        cv2.imshow("output", result)
-        cv2.waitKey(0)
+        background_image = copy_paste(
+            obj_image, polygon, background_image, scale, int(x), int(y)
+        )
+    return background_image
+    # cv2.imshow("output", result)
+    # cv2.waitKey(0)
 
-    return MagicScissorsApp.GeneratedImage(bg, objects)
+    # return MagicScissorsApp.GeneratedImage(bg, objects)

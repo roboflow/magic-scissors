@@ -24,7 +24,8 @@ class Background:
 
 
 class GeneratedImage:
-    def __init__(self, background, object_of_interests):
+    def __init__(self, filename, background, object_of_interests):
+        self.filename = filename
         self.background = background
         self.object_of_interests = object_of_interests
 
@@ -191,20 +192,32 @@ class MagicScissorsApp:
     def generate_dataset(self):
         print("generating dataset")
 
-        for i in range(0, 1):
-            # for i in range(0, self.dataset_size):
-            # num_objects = random.randint(
-            #     self.min_objects_per_image, self.max_objects_per_image
-            # )
+        folder = self.working_dir + "/output"
 
-            num_objects = 10
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+
+        # for i in range(0, 1):
+        for i in range(0, self.dataset_size):
+            num_objects = random.randint(
+                self.min_objects_per_image, self.max_objects_per_image
+            )
 
             background = random.choice(self.backgrounds)
             objects = random.choices(self.objects_of_interest, k=num_objects)
 
-            generated_image = generate_image.generate_image(
+            print("objects per image:", num_objects, len(objects))
+            # TODO: need to get transformed annotation data back here and then generate annotation data to upload
+            image_data = generate_image.generate_image(
                 background, objects, self.min_size_variance, self.max_size_variance
             )
+
+            filename = folder + "/" + str(i) + ".jpg"
+
+            print("write output file:", filename)
+            cv2.imwrite(filename, image_data)
+
+            generated_image = GeneratedImage(filename, background, objects)
 
             self.generated_images.append(generated_image)
 
