@@ -45,8 +45,8 @@ class GeneratedImage:
             # print("pasting object", obj.filename)
             scale = random.uniform(scale_min, scale_max)
 
-            max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
-            max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
+            max_y = background_image.shape[0] - (obj_image.shape[0] * scale)
+            max_x = background_image.shape[1] - (obj_image.shape[1] * scale)
 
             x, y = generate_image.random_point_in_background(
                 self.background, max_x, max_y
@@ -107,8 +107,8 @@ class GeneratedImage:
                     "id": 0,
                     "license": 1,
                     "file_name": self.identifier + ".jpg",
-                    "height": self.image_data.shape[1],
-                    "width": self.image_data.shape[0],
+                    "height": self.image_data.shape[0],
+                    "width": self.image_data.shape[1],
                 }
             ],
             "annotations": annotations,
@@ -320,11 +320,11 @@ class MagicScissorsApp:
 if __name__ == "__main__":
     request_data = {
         "apiKey": os.environ["API_KEY"],
-        "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/1",
-        "backgrounds": "magic-scissors/shopping-carts/1",
+        "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/8",
+        "backgrounds": "magic-scissors/shopping-carts/3",
         "destination": "magic-scissors/synthetic-images",
         "settings": {
-            "datasetSize": 5,
+            "datasetSize": 500,
             "objectsPerImage": {"min": 1, "max": 5},
             "sizeVariance": {"min": 0.1, "max": 0.3},
         },
@@ -336,5 +336,4 @@ if __name__ == "__main__":
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
     magic_scissors.generate_dataset()
-    magic_scissors.upload_dataset_to_destination()
-    cv2.destroyAllWindows()
+    # magic_scissors.upload_dataset_to_destination()

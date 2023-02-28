@@ -30,20 +30,22 @@ def copy_paste(
     """
 
     # generate mask image based on polygon
-    source_width, source_height = source_image.shape[0:2]
+    source_height, source_width = source_image.shape[0:2]
     mask = generate_2d_mask(source_polygon, (source_width, source_height))
 
     # scale the source and mask
     scaled_source = cv2.resize(source_image, None, fx=scale, fy=scale)
     scaled_mask = cv2.resize(mask, None, fx=scale, fy=scale)
-    scaled_width, scaled_height = scaled_source.shape[0:2]
+    scaled_height, scaled_width = scaled_source.shape[0:2]
+
+    _mask = np.expand_dims(scaled_mask, axis=2)
+
+    _patch_bg = target_image[y : y + scaled_height, x : x + scaled_width, :]
+
+    # print("patch shapes:", _mask.shape, scaled_source.shape, _patch_bg.shape)
 
     # generate a patch from the source image  / with background from target image where we are pasting
-    patch = np.where(
-        np.expand_dims(scaled_mask, axis=2),
-        scaled_source,
-        target_image[y : y + scaled_height, x : x + scaled_width, :],
-    )
+    patch = np.where(_mask, scaled_source, _patch_bg)
 
     # paste the patch area into the output image
     target_image[y : y + scaled_height, x : x + scaled_width, :] = patch
@@ -69,42 +71,3 @@ def random_point_in_background(bg, max_x, max_y):
                 np.random.uniform(0, max_x),
                 np.random.uniform(0, max_y),
             ]
-
-
-# def generate_image(filename, bg, objects, scale_min, scale_max):
-
-#     print("generate image with background", bg.filename, len(objects))
-
-#     background_image = cv2.imread(bg.filename)
-
-#     new_annotations = []
-
-#     generated_image = MagicScissorsApp.GeneratedImage(filename, bg, objects)
-
-#     for obj in objects:
-#         obj_image = cv2.imread(obj.filename)
-
-#         polygon = obj.polygon
-#         print("pasting object", obj.filename)
-#         scale = random.uniform(scale_min, scale_max)
-
-#         max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
-#         max_y = background_image.shape[1] - (obj_image.shape[1] * scale)
-
-#         x, y = random_point_in_background(bg, max_x, max_y)
-#         # print("copy paste:", polygon, scale, x, y)
-#         generated_image.image_data = copy_paste(
-#             obj_image, polygon, background_image, scale, int(x), int(y)
-#         )
-
-#         new_polygon = []
-#         for p in obj.polygon:
-#             new_x = (p[0] * scale) + int(x)
-#             new_y = (p[1] * scale) + int(y)
-#             new_polygon.append([new_x, new_y])
-
-#         generated_image.annotations.append(
-#             {"polygon": new_polygon, "classname": obj.classname}
-#         )
-
-#     return generated_image
