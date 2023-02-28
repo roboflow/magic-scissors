@@ -14,14 +14,18 @@ def go():
     print("MAGIC SCISSORS REQUEST STARTED")
     print("=====================")
 
-    with tempfile.TemporaryDirectory() as tempdir:
-        magic_scissors = MagicScissorsApp(request.json, tempdir)
-        magic_scissors.download_objects_of_interest()
-        magic_scissors.download_backgrounds()
-        magic_scissors.generate_dataset()
-        # magic_scissors.upload_dataset_to_destination()
+    try:
+        with tempfile.TemporaryDirectory() as tempdir:
+            magic_scissors = MagicScissorsApp(request.json, tempdir)
+            magic_scissors.download_objects_of_interest()
+            magic_scissors.download_backgrounds()
+            magic_scissors.generate_dataset()
+            magic_scissors.upload_dataset_to_destination()
+        return jsonify({"success": True}), 200
 
-    return jsonify({"success": True})
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"success": False}), 500
 
 
 if __name__ == "__main__":

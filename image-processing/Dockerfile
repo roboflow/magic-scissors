@@ -1,6 +1,9 @@
 FROM python:3.10
 
-RUN pip install Flask gunicorn
+RUN apt-get update
+RUN apt install -y libgl1-mesa-glx
+
+RUN pip install Flask gunicorn numpy opencv-python-headless shapely supervision roboflow
 
 COPY src app/
 WORKDIR /app
