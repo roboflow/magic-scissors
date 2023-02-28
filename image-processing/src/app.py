@@ -1,8 +1,11 @@
+print("INIT MAGIC SCISSORS SERVICE")
+
 from flask import Flask, request, jsonify
 import tempfile
 import os
 
 from MagicScissorsApp import MagicScissorsApp
+
 
 app = Flask(__name__)
 
@@ -20,11 +23,12 @@ def go():
             magic_scissors.download_objects_of_interest()
             magic_scissors.download_backgrounds()
             magic_scissors.generate_dataset()
-            magic_scissors.upload_dataset_to_destination()
-        return jsonify({"success": True}), 200
+            tag_name = magic_scissors.upload_dataset_to_destination()
+        return jsonify({"success": True, "tag_name": tag_name}), 200
 
     except Exception as e:
         print("ERROR:", e)
+        raise e
         return jsonify({"success": False}), 500
 
 

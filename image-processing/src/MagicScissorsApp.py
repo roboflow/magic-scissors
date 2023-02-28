@@ -7,6 +7,7 @@ import generate_image
 import cv2
 import os
 from shapely.geometry import Point, Polygon
+import datetime
 
 
 class ObjectOfInterest:
@@ -307,14 +308,22 @@ class MagicScissorsApp:
         workspace, project = self.destination_dataset_url.split("/")
         destination_project = v = self._rf.workspace(workspace).project(project)
 
+        batch_name = "magic_scissors_" + datetime.datetime.now().strftime(
+            "%Y-%m-%d_%H-%M"
+        )
+
         for generated_image in self.generated_images:
             base_name = folder + "/" + generated_image.identifier
             print("uploading image:", base_name)
             kwargs = {
                 "image_path": base_name + ".jpg",
                 "annotation_path": base_name + ".json",
+                "batch_name": batch_name,
+                "tag_names": [batch_name],
             }
             destination_project.upload(**kwargs)
+
+        return batch_name
 
 
 if __name__ == "__main__":
@@ -324,7 +333,7 @@ if __name__ == "__main__":
         "backgrounds": "magic-scissors/shopping-carts/3",
         "destination": "magic-scissors/synthetic-images",
         "settings": {
-            "datasetSize": 500,
+            "datasetSize": 10,
             "objectsPerImage": {"min": 1, "max": 5},
             "sizeVariance": {"min": 0.1, "max": 0.3},
         },
@@ -336,4 +345,5 @@ if __name__ == "__main__":
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
     magic_scissors.generate_dataset()
-    # magic_scissors.upload_dataset_to_destination()
+    tag_name = magic_scissors.upload_dataset_to_destination()
+    print("done, tagged as:", tag_name)
