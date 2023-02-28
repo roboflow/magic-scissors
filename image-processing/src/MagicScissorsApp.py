@@ -42,7 +42,7 @@ class GeneratedImage:
             obj_image = cv2.imread(obj.filename)
 
             polygon = obj.polygon
-            print("pasting object", obj.filename)
+            # print("pasting object", obj.filename)
             scale = random.uniform(scale_min, scale_max)
 
             max_x = background_image.shape[0] - (obj_image.shape[0] * scale)
@@ -152,6 +152,8 @@ class MagicScissorsApp:
 
         self.working_dir = working_dir
 
+        self._rf = Roboflow(api_key=self.api_key)
+
         print("MAGIC SCISSORS app initialized:")
         print("  working directory:", self.working_dir)
         print("  settings:")
@@ -167,14 +169,11 @@ class MagicScissorsApp:
 
     def download_objects_of_interest(self):
         workspace, project, version = self.objects_of_interest_url.split("/")
-
         location = self.working_dir + "/objects_of_interest"
 
-        # rf = Roboflow(api_key=self.api_key)
-        # v = rf.workspace(workspace).project(project).version(int(version))
-
-        # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        # v.download("coco", location=location)
+        # download dataset
+        v = self._rf.workspace(workspace).project(project).version(int(version))
+        v.download("coco", location=location)
 
         # add all the images as objects of interest
         train_objects = self.load_objects_of_interest_from_coco("train")
@@ -185,60 +184,16 @@ class MagicScissorsApp:
         self.objects_of_interest.extend(test_objects)
         self.objects_of_interest.extend(valid_objects)
 
-    def load_objects_of_interest_from_coco(self, split):
-        folder = self.working_dir + "/objects_of_interest/" + split
-        try:
-            json_file = open(folder + "/_annotations.coco.json")
-            annotation_data = json.load(json_file)
-        except:
-            return []
-
-        images = annotation_data["images"]
-        annotations = annotation_data["annotations"]
-        categories = annotation_data["categories"]
-
-        objects = []
-
-        for img in images:
-            image_id = img["id"]
-            filename = folder + "/" + img["file_name"]
-            annotation = next(
-                (a for a in annotations if a["image_id"] == image_id), None
-            )
-            if not annotation:
-                # print("no annotation for image:", image_id, filename)
-                continue
-
-            classname = categories[annotation["category_id"]]["name"]
-            segmentation = annotation["segmentation"]
-            polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
-
-            obj = ObjectOfInterest(filename, polygon, classname, split)
-            # print("adding object of interest", filename, polygon, classname)
-            objects.append(obj)
-
-        return objects
-
     def download_backgrounds(self):
         workspace, project, version = self.backgrounds_version_url.split("/")
-
         location = self.working_dir + "/backgrounds"
 
         # rf = Roboflow(api_key=self.api_key)
-        # v = rf.workspace(workspace).project(project).version(int(version))
+        v = self._rf.workspace(workspace).project(project).version(int(version))
+        v.download("coco", location=location)
 
-        # TODO: want to download coco here, but the call fails because it cant find a yamp file
-        # v.download("coco", location=location)
-
-        # add all the images as objects of interest
-        # TODO: depending on dataset format and wehter to tonclude all splits, need to do multiple paths / glob patterns
-        train_backgrounds = self.load_backgrounds_from_coco("train")
-        # test_backgrounds = self.load_backgrounds_from_coco("test")
-        # valid_backgrounds = self.load_backgrounds_from_coco("valid")
-
-        self.backgrounds.extend(train_backgrounds)
-        # self.backgrounds.extend(test_backgrounds)
-        # self.backgrounds.extend(valid_backgrounds)
+        # add test images as objects of interest
+        self.backgrounds = self.load_backgrounds_from_coco("train")
 
     def load_backgrounds_from_coco(self, split):
         folder = self.working_dir + "/backgrounds/" + split
@@ -273,6 +228,40 @@ class MagicScissorsApp:
             backgrounds.append(obj)
 
         return backgrounds
+
+    def load_objects_of_interest_from_coco(self, split):
+        folder = self.working_dir + "/objects_of_interest/" + split
+        try:
+            json_file = open(folder + "/_annotations.coco.json")
+            annotation_data = json.load(json_file)
+        except:
+            return []
+
+        images = annotation_data["images"]
+        annotations = annotation_data["annotations"]
+        categories = annotation_data["categories"]
+
+        objects = []
+
+        for img in images:
+            image_id = img["id"]
+            filename = folder + "/" + img["file_name"]
+            annotation = next(
+                (a for a in annotations if a["image_id"] == image_id), None
+            )
+            if not annotation:
+                # print("no annotation for image:", image_id, filename)
+                continue
+
+            classname = categories[annotation["category_id"]]["name"]
+            segmentation = annotation["segmentation"]
+            polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
+
+            obj = ObjectOfInterest(filename, polygon, classname, split)
+            # print("adding object of interest", filename, polygon, classname)
+            objects.append(obj)
+
+        return objects
 
     def generate_dataset(self):
         print("generating dataset")
@@ -313,19 +302,29 @@ class MagicScissorsApp:
 
     def upload_dataset_to_destination(self):
         print("uploading dataset to destination")
+        folder = self.working_dir + "/output"
+
+        workspace, project = self.destination_dataset_url.split("/")
+        destination_project = v = self._rf.workspace(workspace).project(project)
+
         for generated_image in self.generated_images:
-            print("  upload image...")
+            base_name = folder + "/" + generated_image.identifier
+            print("uploading image:", base_name)
+            kwargs = {
+                "image_path": base_name + ".jpg",
+                "annotation_path": base_name + ".json",
+            }
+            destination_project.upload(**kwargs)
 
 
 if __name__ == "__main__":
-
     request_data = {
         "apiKey": os.environ["API_KEY"],
         "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/1",
         "backgrounds": "magic-scissors/shopping-carts/1",
-        "destination": "magic-scissors/synthetic-data",
+        "destination": "magic-scissors/synthetic-images",
         "settings": {
-            "datasetSize": 250,
+            "datasetSize": 5,
             "objectsPerImage": {"min": 1, "max": 5},
             "sizeVariance": {"min": 0.1, "max": 0.3},
         },
@@ -337,5 +336,5 @@ if __name__ == "__main__":
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
     magic_scissors.generate_dataset()
-    # magic_scissors.upload_dataset_to_destination()
+    magic_scissors.upload_dataset_to_destination()
     cv2.destroyAllWindows()
