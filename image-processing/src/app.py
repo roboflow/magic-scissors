@@ -30,6 +30,7 @@ def go():
     except Exception as e:
         print("caught an error.  sending error response")
         print("ERROR:", e)
+        raise e
         return jsonify({"success": False}), 500
 
 
