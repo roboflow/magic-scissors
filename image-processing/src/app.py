@@ -24,11 +24,12 @@ def go():
             magic_scissors.download_backgrounds()
             magic_scissors.generate_dataset()
             tag_name = magic_scissors.upload_dataset_to_destination()
-        return jsonify({"success": True, "tag_name": tag_name}), 200
+        print("finished.  sending response")
+        return jsonify({"success": True, "tag_name": tag_name})
 
     except Exception as e:
+        print("caught an error.  sending error response")
         print("ERROR:", e)
-        raise e
         return jsonify({"success": False}), 500
 
 
