@@ -22,8 +22,8 @@ def go():
             magic_scissors = MagicScissorsApp(request.json, tempdir)
             magic_scissors.download_objects_of_interest()
             magic_scissors.download_backgrounds()
-            magic_scissors.generate_dataset()
-            tag_name = magic_scissors.upload_dataset_to_destination()
+            tag_name = magic_scissors.generate_dataset()
+            # tag_name = magic_scissors.upload_dataset_to_destination()
         print("finished.  sending response")
         return jsonify({"success": True, "tag_name": tag_name})
 

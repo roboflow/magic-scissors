@@ -272,6 +272,13 @@ class MagicScissorsApp:
         if not os.path.exists(folder):
             os.mkdir(folder)
 
+        workspace, project = self.destination_dataset_url.split("/")
+        destination_project = v = self._rf.workspace(workspace).project(project)
+
+        batch_name = "magic_scissors_" + datetime.datetime.now().strftime(
+            "%Y-%m-%d_%H-%M"
+        )
+
         # for i in range(0, 1):
         for i in range(0, self.dataset_size):
             num_objects = random.randint(
@@ -291,36 +298,24 @@ class MagicScissorsApp:
 
             print("write output file:", generated_image.identifier)
 
+            base_name = folder + "/" + generated_image.identifier
+
             cv2.imwrite(
-                folder + "/" + generated_image.identifier + ".jpg",
+                base_name + ".jpg",
                 generated_image.image_data,
             )
 
-            with open(folder + "/" + generated_image.identifier + ".json", "w") as f:
+            with open(base_name + ".json", "w") as f:
                 json.dump(generated_image.to_coco_json(), f)
 
-            self.generated_images.append(generated_image)
-
-    def upload_dataset_to_destination(self):
-        print("uploading dataset to destination")
-        folder = self.working_dir + "/output"
-
-        workspace, project = self.destination_dataset_url.split("/")
-        destination_project = v = self._rf.workspace(workspace).project(project)
-
-        batch_name = "magic_scissors_" + datetime.datetime.now().strftime(
-            "%Y-%m-%d_%H-%M"
-        )
-
-        for generated_image in self.generated_images:
-            base_name = folder + "/" + generated_image.identifier
-            print("uploading image:", base_name)
             kwargs = {
                 "image_path": base_name + ".jpg",
                 "annotation_path": base_name + ".json",
                 "batch_name": batch_name,
                 "tag_names": [batch_name],
             }
+
+            print("uploading file", base_name)
             destination_project.upload(**kwargs)
 
         return batch_name
@@ -344,6 +339,6 @@ if __name__ == "__main__":
     magic_scissors = MagicScissorsApp(request_data, working_dir)
     magic_scissors.download_objects_of_interest()
     magic_scissors.download_backgrounds()
-    magic_scissors.generate_dataset()
-    tag_name = magic_scissors.upload_dataset_to_destination()
+    tag_name = magic_scissors.generate_dataset()
+    # tag_name = magic_scissors.upload_dataset_to_destination()
     print("done, tagged as:", tag_name)
