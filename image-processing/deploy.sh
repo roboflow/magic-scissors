@@ -1,2 +1,2 @@
 gcloud builds submit --tag gcr.io/rf-magicscissors/magicscissors-python --project rf-magicscissors
-gcloud run deploy magicscissors-python --image gcr.io/rf-magicscissors/magicscissors-python --platform managed --region us-central1 --allow-unauthenticated --project rf-magicscissors --memory 8G --cpu 2 --timeout 60m
+gcloud run deploy magicscissors-python --image gcr.io/rf-magicscissors/magicscissors-python --platform managed --region us-central1 --allow-unauthenticated --project rf-magicscissors --memory 16G --cpu 4 --timeout 60m
