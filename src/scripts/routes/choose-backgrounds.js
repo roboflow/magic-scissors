@@ -15,7 +15,7 @@ module.exports = function(state) {
             var projects = _.chain(response.workspace.projects).map(function(p) {
                 if(!p.type) p.type = "object-detection";
 
-                if(p.type == "classsification") return null;
+                if(p.type == "classification") return null;
                 if(!p.images) return null;
 
                 return p;
