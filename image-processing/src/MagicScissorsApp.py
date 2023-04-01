@@ -245,6 +245,21 @@ class MagicScissorsApp:
 
             classname = categories[annotation["category_id"]]["name"]
             segmentation = annotation["segmentation"]
+            if(len(segmentation) == 0):
+                # convert bbox to polygon ([x,y,w,h] -> [[x,y,x+w,y,x+w,y+h,x,y+h]])
+                bbox = annotation["bbox"]
+                segmentation = [[
+                    bbox[0],
+                    bbox[1],
+                    bbox[0] + bbox[2],
+                    bbox[1],
+                    bbox[0] + bbox[2],
+                    bbox[1] + bbox[3],
+                    bbox[0],
+                    bbox[1] + bbox[3],
+                ]]
+
+
             polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
 
             obj = Background(filename, polygon, classname, split)
@@ -348,12 +363,15 @@ class MagicScissorsApp:
 if __name__ == "__main__":
     request_data = {
         "apiKey": roboflow.load_roboflow_api_key(),
-        "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/8",
-        "backgrounds": "magic-scissors/shopping-carts/3",
-        "destination": "magic-scissors/synthetic-images",
+        # "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/8",
+        # "backgrounds": "magic-scissors/shopping-carts/3",
+        # "destination": "magic-scissors/synthetic-images",
+        "objectsOfInterest": "cv-roasts/source-images/2",
+        "backgrounds": "cv-roasts/backgrounds-yoqbe/2",
+        "destination": "cv-roasts/coffee-cups-roboflow-livestream",
         "settings": {
             "datasetSize": 10,
-            "objectsPerImage": {"min": 5, "max": 10},
+            "objectsPerImage": {"min": 1, "max": 1},
             "sizeVariance": {"min": 0.4, "max": 0.5},
             # "annotateOcclusion": False
         }
