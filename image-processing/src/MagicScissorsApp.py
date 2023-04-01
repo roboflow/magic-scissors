@@ -1,14 +1,15 @@
 import glob
 import random
+import roboflow
 from roboflow import Roboflow
 import numpy as np
 import json
 import generate_image
 import cv2
 import os
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, MultiPolygon
 import datetime
-
+from pathlib import Path
 
 class ObjectOfInterest:
     def __init__(self, filename, polygon, classname, split):
@@ -28,11 +29,13 @@ class Background:
 
 class GeneratedImage:
     def __init__(
-        self, identifier, background, object_of_interests, scale_min, scale_max
+        self, identifier, background, object_of_interests, scale_min, scale_max, annotate_occlusion=False
     ):
         self.identifier = identifier
         self.background = background
         self.object_of_interests = object_of_interests
+
+        self.annotate_occlusion = annotate_occlusion
 
         self.image_data = None
         self.annotations = []
@@ -84,18 +87,37 @@ class GeneratedImage:
 
         annotations = []
         annotation_counter = 0
-        for a in self.annotations:
+        #annotation and index
+        for i, a in enumerate(self.annotations):
             polygon = Polygon(a["polygon"])
+
+            # if we're not allowing occlusion to be part of the annotation
+            # we need to iterate over all the other annotations on top of
+            # this one (after it in the list of annotations) and subtract
+            # their area from the current annotation
+            if not self.annotate_occlusion:
+                for j in range(i + 1, len(self.annotations)):
+                    other_polygon = Polygon(self.annotations[j]["polygon"])
+                    polygon = polygon.difference(other_polygon)
+
             minx, miny, maxx, maxy = polygon.bounds
 
-            flattened_polygon = [item for sublist in a["polygon"] for item in sublist]
+            if isinstance(polygon, Polygon):
+                flattened_polygons = [item for sublist in polygon.exterior.coords for item in sublist]
+            elif isinstance(polygon, MultiPolygon):
+                flattened_polygons = []
+                for p in polygon.geoms:
+                    flattened_polygons.extend([item for sublist in p.exterior.coords for item in sublist])
+            else:
+                raise ValueError("Unsupported geometry type")
+
             a = {
                 "id": annotation_counter,
                 "image_id": 0,
                 "category_id": category_by_name[a["classname"]]["id"],
                 "bbox": [minx, miny, maxx, maxy],
                 "area": 0,
-                "segmentation": [flattened_polygon],
+                "segmentation": flattened_polygons,
                 "iscrowd": 0,
             }
             annotation_counter += 1
@@ -145,6 +167,7 @@ class MagicScissorsApp:
             self.max_objects_per_image = request_settings["objectsPerImage"]["max"]
             self.min_size_variance = request_settings["sizeVariance"]["min"]
             self.max_size_variance = request_settings["sizeVariance"]["max"]
+            self.annotate_occlusion = request_settings.get("annotateOcclusion", False)
         except Exception as e:
             print("Error parsing request parameters", e)
             raise Exception(
@@ -294,6 +317,7 @@ class MagicScissorsApp:
                 objects,
                 self.min_size_variance,
                 self.max_size_variance,
+                self.annotate_occlusion
             )
 
             print("write output file:", generated_image.identifier)
@@ -323,18 +347,19 @@ class MagicScissorsApp:
 
 if __name__ == "__main__":
     request_data = {
-        "apiKey": os.environ["API_KEY"],
+        "apiKey": roboflow.load_roboflow_api_key(),
         "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/8",
         "backgrounds": "magic-scissors/shopping-carts/3",
         "destination": "magic-scissors/synthetic-images",
         "settings": {
             "datasetSize": 10,
-            "objectsPerImage": {"min": 1, "max": 5},
-            "sizeVariance": {"min": 0.1, "max": 0.3},
-        },
+            "objectsPerImage": {"min": 5, "max": 10},
+            "sizeVariance": {"min": 0.4, "max": 0.5},
+            # "annotateOcclusion": False
+        }
     }
 
-    working_dir = "/Users/hansent/Desktop/ms_temp"
+    working_dir = f"{Path.home()}/Desktop/ms_temp"
 
     magic_scissors = MagicScissorsApp(request_data, working_dir)
     magic_scissors.download_objects_of_interest()

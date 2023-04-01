@@ -8,6 +8,7 @@ dist/*.txt
 dist/index.html
 
 .DS_Store
+__pycache__
 
 # Logs
 logs
