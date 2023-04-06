@@ -46,7 +46,7 @@ class GeneratedImage:
             obj_image = cv2.imread(obj.filename)
 
             polygon = obj.polygon
-            # print("pasting object", obj.filename)
+            print("pasting object", obj.filename)
             scale = random.uniform(scale_min, scale_max)
 
             max_y = background_image.shape[0] - (obj_image.shape[0] * scale)
@@ -311,13 +311,14 @@ class MagicScissorsApp:
             os.mkdir(folder)
 
         workspace, project = self.destination_dataset_url.split("/")
-        destination_project = v = self._rf.workspace(workspace).project(project)
+        destination_project = self._rf.workspace(workspace).project(project)
 
         batch_name = "magic_scissors_" + datetime.datetime.now().strftime(
             "%Y-%m-%d_%H-%M"
         )
 
         # for i in range(0, 1):
+        print("generating", self.dataset_size, "images")
         for i in range(0, self.dataset_size):
             num_objects = random.randint(
                 self.min_objects_per_image, self.max_objects_per_image

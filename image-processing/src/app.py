@@ -9,6 +9,9 @@ from MagicScissorsApp import MagicScissorsApp
 
 app = Flask(__name__)
 
+@app.route('/')
+def index():
+    return "Ok."
 
 @app.route("/python/go", methods=["POST"])
 def go():
