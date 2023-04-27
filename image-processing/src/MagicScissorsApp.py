@@ -361,7 +361,10 @@ class MagicScissorsApp:
                 destination_project.upload(**kwargs)
             except:
                 print("failed to upload file, continuing to the next though: ", base_name, str(traceback.format_exc()))
-
+                if os.path.exists(base_name + ".json"):
+                    print("Printing annotation file contents:")
+                    with open(base_name + ".json", "r") as f:
+                        print(f.read())
         return batch_name
 
 
