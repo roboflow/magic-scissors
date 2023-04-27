@@ -10,6 +10,7 @@ import os
 from shapely.geometry import Point, Polygon, MultiPolygon
 import datetime
 from pathlib import Path
+import traceback
 
 class ObjectOfInterest:
     def __init__(self, filename, polygon, classname, split):
@@ -356,7 +357,10 @@ class MagicScissorsApp:
             }
 
             print("uploading file", base_name)
-            destination_project.upload(**kwargs)
+            try:
+                destination_project.upload(**kwargs)
+            except:
+                print("failed to upload file, continuing to the next though: ", base_name, str(traceback.format_exc()))
 
         return batch_name
 
