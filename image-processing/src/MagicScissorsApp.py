@@ -320,7 +320,8 @@ class MagicScissorsApp:
 
         # for i in range(0, 1):
         print("generating", self.dataset_size, "images")
-        for i in range(0, self.dataset_size):
+        i = 0
+        while (i < self.dataset_size):
             num_objects = random.randint(
                 self.min_objects_per_image, self.max_objects_per_image
             )
@@ -359,6 +360,7 @@ class MagicScissorsApp:
             print("uploading file", base_name)
             try:
                 destination_project.upload(**kwargs)
+                i = i+1
             except:
                 print("failed to upload file, continuing to the next though: ", base_name, str(traceback.format_exc()))
                 if os.path.exists(base_name + ".json"):
