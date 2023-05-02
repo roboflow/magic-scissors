@@ -320,9 +320,9 @@ class MagicScissorsApp:
 
         # for i in range(0, 1):
         print("generating", self.dataset_size, "images")
-        imagesGenerated = 0
+        images_generated = 0
         i = 0
-        while (imagesGenerated < self.dataset_size) and (i < self.dataset_size * 2):
+        while (images_generated < self.dataset_size) and (i < self.dataset_size * 2):
             i = i+1
             num_objects = random.randint(
                 self.min_objects_per_image, self.max_objects_per_image
