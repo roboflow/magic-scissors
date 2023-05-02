@@ -10,6 +10,7 @@ import os
 from shapely.geometry import Point, Polygon, MultiPolygon
 import datetime
 from pathlib import Path
+import traceback
 
 class ObjectOfInterest:
     def __init__(self, filename, polygon, classname, split):
@@ -319,7 +320,10 @@ class MagicScissorsApp:
 
         # for i in range(0, 1):
         print("generating", self.dataset_size, "images")
-        for i in range(0, self.dataset_size):
+        images_generated = 0
+        i = 0
+        while (images_generated < self.dataset_size) and (i < self.dataset_size * 2):
+            i = i+1
             num_objects = random.randint(
                 self.min_objects_per_image, self.max_objects_per_image
             )
@@ -356,8 +360,17 @@ class MagicScissorsApp:
             }
 
             print("uploading file", base_name)
-            destination_project.upload(**kwargs)
-
+            try:
+                destination_project.upload(**kwargs)
+                images_generated = images_generated+1
+            except:
+                print("failed to upload file, continuing to the next though: ", base_name, str(traceback.format_exc()))
+                if os.path.exists(base_name + ".json"):
+                    print("Printing annotation file contents:")
+                    with open(base_name + ".json", "r") as f:
+                        print(f.read())
+        if i > self.dataset_size * 2:
+            print("Failed to generate enough images, only generated ", images_generated, " images")
         return batch_name
 
 

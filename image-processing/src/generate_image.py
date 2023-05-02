@@ -1,4 +1,4 @@
-from supervision.detection.utils import generate_2d_mask
+from supervision.detection.utils import polygon_to_mask
 import cv2
 import numpy as np
 import random
@@ -31,7 +31,7 @@ def copy_paste(
 
     # generate mask image based on polygon
     source_height, source_width = source_image.shape[0:2]
-    mask = generate_2d_mask(source_polygon, (source_width, source_height))
+    mask = polygon_to_mask(source_polygon, (source_width, source_height))
 
     # scale the source and mask
     scaled_source = cv2.resize(source_image, None, fx=scale, fy=scale)
