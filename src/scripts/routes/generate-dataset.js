@@ -264,11 +264,16 @@ module.exports = function (state) {
                   destination: [state.destination.project].join("/"),
                   settings: state.settings,
                 }),
-              }).then(function (response) {
-                progress[4].inProgress = false;
-                progress[4].completed = true;
-                render();
-                // all done!
+              }).done(function (response) {
+                  progress[4].inProgress = false;
+                  progress[4].completed = true;
+                  render();
+                  // all done!
+              }).fail(function (jqXHR, textStatus, errorThrown) {
+                  progress[4].inProgress = false;
+                  progress[4].failed = true;
+                  render();
+                  console.log("AJAX request failed: " + textStatus);
               });
             }
           );
