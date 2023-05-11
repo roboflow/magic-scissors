@@ -50,12 +50,19 @@ class GeneratedImage:
             print("pasting object", obj.filename)
             scale = random.uniform(scale_min, scale_max)
 
-            max_y = background_image.shape[0] - (obj_image.shape[0] * scale)
-            max_x = background_image.shape[1] - (obj_image.shape[1] * scale)
+            while True:
+                max_y = background_image.shape[0] - (obj_image.shape[0] * scale)
+                max_x = background_image.shape[1] - (obj_image.shape[1] * scale)
 
-            x, y = generate_image.random_point_in_background(
-                self.background, max_x, max_y
-            )
+                x, y = generate_image.random_point_in_background(
+                    self.background, max_x, max_y
+                )
+
+                if max_y < 0 or max_x < 0 or x == None or y == None:
+                    scale = scale / 2
+                else:
+                    break
+                
             # print("copy paste:", polygon, scale, x, y)
             self.image_data = generate_image.copy_paste(
                 obj_image, polygon, background_image, scale, int(x), int(y)
