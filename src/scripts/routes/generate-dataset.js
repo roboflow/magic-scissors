@@ -200,7 +200,13 @@ module.exports = function (state) {
                 if (response.progress >= 1) {
                   resolve();
                 } else {
-                  var percent = response.version.progress * 100;
+                  var percent = 0;
+                  if (response.version.progress) {
+                    percent = response.version.progress * 100;
+                  } else if (response.progress) {
+                    percent = response.progress * 100;
+                  }
+
                   progress[index].inProgress = true;
                   progress[index].progress.percent = Math.floor(percent);
                   render();
@@ -264,17 +270,19 @@ module.exports = function (state) {
                   destination: [state.destination.project].join("/"),
                   settings: state.settings,
                 }),
-              }).done(function (response) {
+              })
+                .done(function (response) {
                   progress[4].inProgress = false;
                   progress[4].completed = true;
                   render();
                   // all done!
-              }).fail(function (jqXHR, textStatus, errorThrown) {
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
                   progress[4].inProgress = false;
                   progress[4].failed = true;
                   render();
                   console.log("AJAX request failed: " + textStatus);
-              });
+                });
             }
           );
         }
