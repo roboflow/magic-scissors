@@ -12,6 +12,7 @@ import datetime
 from pathlib import Path
 import traceback
 
+
 class ObjectOfInterest:
     def __init__(self, filename, polygon, classname, split):
         self.filename = filename
@@ -30,7 +31,13 @@ class Background:
 
 class GeneratedImage:
     def __init__(
-        self, identifier, background, object_of_interests, scale_min, scale_max, annotate_occlusion=False
+        self,
+        identifier,
+        background,
+        object_of_interests,
+        scale_min,
+        scale_max,
+        annotate_occlusion=False,
     ):
         self.identifier = identifier
         self.background = background
@@ -62,7 +69,7 @@ class GeneratedImage:
                     scale = scale / 2
                 else:
                     break
-                
+
             # print("copy paste:", polygon, scale, x, y)
             self.image_data = generate_image.copy_paste(
                 obj_image, polygon, background_image, scale, int(x), int(y)
@@ -95,7 +102,7 @@ class GeneratedImage:
 
         annotations = []
         annotation_counter = 0
-        #annotation and index
+        # annotation and index
         for i, a in enumerate(self.annotations):
             polygon = Polygon(a["polygon"])
 
@@ -111,11 +118,15 @@ class GeneratedImage:
             minx, miny, maxx, maxy = polygon.bounds
 
             if isinstance(polygon, Polygon):
-                flattened_polygons = [item for sublist in polygon.exterior.coords for item in sublist]
+                flattened_polygons = [
+                    item for sublist in polygon.exterior.coords for item in sublist
+                ]
             elif isinstance(polygon, MultiPolygon):
                 flattened_polygons = []
                 for p in polygon.geoms:
-                    flattened_polygons.extend([item for sublist in p.exterior.coords for item in sublist])
+                    flattened_polygons.extend(
+                        [item for sublist in p.exterior.coords for item in sublist]
+                    )
             else:
                 raise ValueError("Unsupported geometry type")
 
@@ -148,7 +159,6 @@ class GeneratedImage:
 
 class MagicScissorsApp:
     def __init__(self, request_parameters, working_dir):
-
         # these will get populated with the objects of interest and backgrounds
         # after we download the respective versions holding the image and annotation data
         # for them
@@ -253,20 +263,21 @@ class MagicScissorsApp:
 
             classname = categories[annotation["category_id"]]["name"]
             segmentation = annotation["segmentation"]
-            if(len(segmentation) == 0):
+            if len(segmentation) == 0:
                 # convert bbox to polygon ([x,y,w,h] -> [[x,y,x+w,y,x+w,y+h,x,y+h]])
                 bbox = annotation["bbox"]
-                segmentation = [[
-                    bbox[0],
-                    bbox[1],
-                    bbox[0] + bbox[2],
-                    bbox[1],
-                    bbox[0] + bbox[2],
-                    bbox[1] + bbox[3],
-                    bbox[0],
-                    bbox[1] + bbox[3],
-                ]]
-
+                segmentation = [
+                    [
+                        bbox[0],
+                        bbox[1],
+                        bbox[0] + bbox[2],
+                        bbox[1],
+                        bbox[0] + bbox[2],
+                        bbox[1] + bbox[3],
+                        bbox[0],
+                        bbox[1] + bbox[3],
+                    ]
+                ]
 
             polygon = np.array(segmentation).astype(np.int32).reshape(-1, 2)
 
@@ -330,7 +341,7 @@ class MagicScissorsApp:
         images_generated = 0
         i = 0
         while (images_generated < self.dataset_size) and (i < self.dataset_size * 2):
-            i = i+1
+            i = i + 1
             num_objects = random.randint(
                 self.min_objects_per_image, self.max_objects_per_image
             )
@@ -344,7 +355,7 @@ class MagicScissorsApp:
                 objects,
                 self.min_size_variance,
                 self.max_size_variance,
-                self.annotate_occlusion
+                self.annotate_occlusion,
             )
 
             print("write output file:", generated_image.identifier)
@@ -369,33 +380,41 @@ class MagicScissorsApp:
             print("uploading file", base_name)
             try:
                 destination_project.upload(**kwargs)
-                images_generated = images_generated+1
+                images_generated = images_generated + 1
             except:
-                print("failed to upload file, continuing to the next though: ", base_name, str(traceback.format_exc()))
+                print(
+                    "failed to upload file, continuing to the next though: ",
+                    base_name,
+                    str(traceback.format_exc()),
+                )
                 if os.path.exists(base_name + ".json"):
                     print("Printing annotation file contents:")
                     with open(base_name + ".json", "r") as f:
                         print(f.read())
         if i > self.dataset_size * 2:
-            print("Failed to generate enough images, only generated ", images_generated, " images")
+            print(
+                "Failed to generate enough images, only generated ",
+                images_generated,
+                " images",
+            )
         return batch_name
 
 
 if __name__ == "__main__":
     request_data = {
         "apiKey": roboflow.load_roboflow_api_key(),
-        # "objectsOfInterest": "magic-scissors/grocery-items-hrmxb/8",
-        # "backgrounds": "magic-scissors/shopping-carts/3",
-        # "destination": "magic-scissors/synthetic-images",
-        "objectsOfInterest": "cv-roasts/source-images/2",
-        "backgrounds": "cv-roasts/backgrounds-yoqbe/2",
-        "destination": "cv-roasts/coffee-cups-roboflow-livestream",
+        "objectsOfInterest": "magic-scissors-debug/objects-of-interest-simple/2",
+        "backgrounds": "magic-scissors-debug/backgrounds-1/2",
+        "destination": "magic-scissors-debug/test-1-knigv",
+        # "objectsOfInterest": "cv-roasts/source-images/2",
+        # "backgrounds": "cv-roasts/backgrounds-yoqbe/2",
+        # "destination": "cv-roasts/coffee-cups-roboflow-livestream",
         "settings": {
-            "datasetSize": 10,
+            "datasetSize": 2,
             "objectsPerImage": {"min": 1, "max": 1},
-            "sizeVariance": {"min": 0.4, "max": 0.5},
+            "sizeVariance": {"min": 1.5, "max": 2},
             # "annotateOcclusion": False
-        }
+        },
     }
 
     working_dir = f"{Path.home()}/Desktop/ms_temp"

@@ -32,17 +32,24 @@ def copy_paste(
     # generate mask image based on polygon
     source_height, source_width = source_image.shape[0:2]
     mask = polygon_to_mask(source_polygon, (source_width, source_height))
-    
+
     # print("source image size:",source_image.shape  )
     # print("mask image size:",mask.shape  )
 
     # print("pasting at", x,y)
 
+    print("SCALE IN", scale)
 
-    #if the source is going to be bigger than the target, then we need to scale it down so it will fit
-    if source_width > target_image.shape[1] or source_height > target_image.shape[0]:
-        scale = min(target_image.shape[1] / source_width, target_image.shape[0] / source_height)
+    # if the source is going to be bigger than the target, then we need to scale it down so it will fit
+    if (source_width * scale) > target_image.shape[1] or (
+        source_height * scale
+    ) > target_image.shape[0]:
+        scale = min(
+            target_image.shape[1] / source_width, target_image.shape[0] / source_height
+        )
         # print("scaling source image down to fit", scale)
+
+    print("SCALE OUT", scale)
 
     # scale the source and mask
     scaled_source = cv2.resize(source_image, None, fx=scale, fy=scale)
@@ -56,9 +63,9 @@ def copy_paste(
 
     # print("grabbing patch from background:", x,y, scaled_width,scaled_height )
     _patch_bg_candidate = target_image[y : y + scaled_height, x : x + scaled_width, :]
-        
+
     # print("_patch_bg_candidate size:", _patch_bg_candidate.shape)
-    
+
     # Desired shape
     desired_shape = scaled_source.shape
 
@@ -67,10 +74,11 @@ def copy_paste(
     pad_width = desired_shape[1] - _patch_bg_candidate.shape[1]
 
     # Pad the array with zeros
-    _patch_bg = np.pad(_patch_bg_candidate, ((0, pad_height), (0, pad_width), (0, 0)), mode='constant')
+    _patch_bg = np.pad(
+        _patch_bg_candidate, ((0, pad_height), (0, pad_width), (0, 0)), mode="constant"
+    )
 
     # print("_patch_bg size:", _patch_bg.shape)
-    
 
     # print("patch shapes:", _mask.shape, scaled_source.shape, _patch_bg.shape)
 
@@ -79,17 +87,16 @@ def copy_paste(
     patch = np.where(_mask, scaled_source, _patch_bg)
 
     # print("patch size:", patch.shape, x, y, scaled_height, scaled_width, patch.shape)
-    
 
     # paste the patch area into the output image
     # print("mergin patch with target image")
     x_right = min(x + scaled_width, target_image.shape[1])
     y_bottom = min(y + scaled_height, target_image.shape[0])
-    
+
     patch_width = x_right - x
-    patch_height= y_bottom - y
-    
-    target_image[y : y_bottom, x : x_right, :] = patch[0:patch_height, 0:patch_width, :]
+    patch_height = y_bottom - y
+
+    target_image[y:y_bottom, x:x_right, :] = patch[0:patch_height, 0:patch_width, :]
 
     return target_image
 
