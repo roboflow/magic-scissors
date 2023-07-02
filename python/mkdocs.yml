@@ -29,8 +29,8 @@ nav:
 
 theme:
   name: 'material'
-  logo: https://media.roboflow.com/open-source/supervision/supervision-lenny.png
-  favicon: https://media.roboflow.com/open-source/supervision/supervision-lenny.png
+  logo: https://media.roboflow.com/magic-scissors-icon.png
+  favicon: https://media.roboflow.com/magic-scissors-icon.png
   palette:
     # Palette for light mode
     - scheme: default
