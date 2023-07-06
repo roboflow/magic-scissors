@@ -2,22 +2,21 @@
 
 # Magic Scissors ✂️
 
-[![version](https://badge.fury.io/py/magicscissors.svg?)](https://badge.fury.io/py/magicscissors)
-[![downloads](https://img.shields.io/pypi/dm/magicscissors)](https://pypistats.org/packages/magicscissors)
-[![license](https://img.shields.io/pypi/l/magicscissors?)](https://github.com/roboflow/magicscissors-python/blob/main/LICENSE)
-[![python-version](https://img.shields.io/pypi/pyversions/magicscissors)](https://badge.fury.io/py/magicscissors)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)]()
+[![version](https://badge.fury.io/py/magic-scissors.svg?)](https://badge.fury.io/py/magic-scissors)
+[![downloads](https://img.shields.io/pypi/dm/magic-scissors)](https://pypistats.org/packages/magic-scissors)
+[![license](https://img.shields.io/pypi/l/magic-scissors?)](https://github.com/roboflow/magic-scissors-python/blob/main/LICENSE)
+[![python-version](https://img.shields.io/pypi/pyversions/magic-scissors)](https://badge.fury.io/py/magic-scissors)
 
 Generate synthetic data for computer vision using copy-paste context augmentation.
 
-Magic Scissors is available as a Python package and a [web application](https://magicscissors.app).
+Magic Scissors is available as a Python package and a [web application](https://magic-scissors.app).
 
 ## Installation
 
 To install Magic Scissors, run the following command:
 
 ```bash
-pip install magicscissors
+pip install magic-scissors
 ```
 
 ## Quickstart 🚀
@@ -30,9 +29,9 @@ To use Magic Scissors, you need two datasets:
 Both datasets should be formatted as COCO JSON. You can [convert data between formats](https://roboflow.com/formats) using Roboflow.
 
 ```python
-from magic_scissors import MagicScissors
+from magic_scissors import magic-scissors
 
-data = MagicScissors(
+data = magic-scissors(
     dataset_size=100,
     min_objects_per_image=1,
     max_objects_per_image=3,

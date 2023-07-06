@@ -2,7 +2,7 @@ import setuptools
 from setuptools import find_packages
 import re
 
-with open("./src/__init__.py", 'r') as f:
+with open("./magic_scissors/__init__.py", 'r') as f:
     content = f.read()
     # from https://www.py4u.net/discuss/139845
     version = re.search(r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', content).group(1)
@@ -18,7 +18,7 @@ setuptools.setup(
     description="Generate synthetic data for computer vision projects using copy-paste context-augmentation.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/roboflow/magic-scissors-python",
+    url="https://github.com/roboflow/magic-scissors/tree/main/python",
     install_requires=[
         "roboflow",
         "shapely",
