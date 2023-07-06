@@ -29,9 +29,9 @@ To use Magic Scissors, you need two datasets:
 Both datasets should be formatted as COCO JSON. You can [convert data between formats](https://roboflow.com/formats) using Roboflow.
 
 ```python
-from magic_scissors import magic-scissors
+from magic_scissors import MagicScissors
 
-data = magic-scissors(
+data = MagicScissors(
     dataset_size=100,
     min_objects_per_image=1,
     max_objects_per_image=3,
